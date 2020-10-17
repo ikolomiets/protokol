@@ -8,7 +8,7 @@ abstract class ProtokolComposer : Protokol {
 
     abstract fun composeBYTEARRAY(value: ByteArray, validator: (ByteArray) -> Unit = {})
 
-    open fun composeBITSET8(
+    private fun composeBITSET8(
         b0: Boolean,
         b1: Boolean,
         b2: Boolean,
@@ -28,6 +28,7 @@ abstract class ProtokolComposer : Protokol {
             b7: Boolean
         ) -> Unit,
     ) {
+        validator(b0, b1, b2, b3, b4, b5, b6, b7)
         val value = (((((((
                 (if (b7) 1 else 0) shl 1) or
                 (if (b6) 1 else 0) shl 1) or
@@ -40,24 +41,32 @@ abstract class ProtokolComposer : Protokol {
         composeBYTE(value.toByte())
     }
 
-    open fun composeSTRING(value: String, validator: (String) -> Unit) =
+    private fun composeSTRING(value: String, validator: (String) -> Unit) {
+        validator(value)
         composeBYTEARRAY(value.encodeToByteArray())
+    }
 
-    open fun composeBOOLEAN(value: Boolean, validator: (Boolean) -> Unit) = composeBYTE(if (value) 1 else 0)
+    private fun composeBOOLEAN(value: Boolean, validator: (Boolean) -> Unit) {
+        validator(value)
+        composeBYTE(if (value) 1 else 0)
+    }
 
-    open fun composeSHORT(value: Short, validator: (Short) -> Unit = {}) {
+    private fun composeSHORT(value: Short, validator: (Short) -> Unit = {}) {
+        validator(value)
         composeBYTE((value.toInt() ushr 8).toByte())
         composeBYTE(value.toByte())
     }
 
-    open fun composeINT(value: Int, validator: (Int) -> Unit) {
+    private fun composeINT(value: Int, validator: (Int) -> Unit) {
+        validator(value)
         composeBYTE((value ushr 24).toByte())
         composeBYTE((value ushr 16).toByte())
         composeBYTE((value ushr 8).toByte())
         composeBYTE(value.toByte())
     }
 
-    open fun composeLONG(value: Long, validator: (Long) -> Unit) {
+    private fun composeLONG(value: Long, validator: (Long) -> Unit) {
+        validator(value)
         composeBYTE((value ushr 56).toByte())
         composeBYTE((value ushr 48).toByte())
         composeBYTE((value ushr 40).toByte())
@@ -68,19 +77,27 @@ abstract class ProtokolComposer : Protokol {
         composeBYTE(value.toByte())
     }
 
-    open fun <E : Enum<E>> composeENUM8(value: E, values: Array<E>, validator: (E) -> Unit) =
+    private fun <E : Enum<E>> composeENUM8(value: E, values: Array<E>, validator: (E) -> Unit) {
+        require(values.size <= 256) { "ENUM8 supports enums with up to 256 instances, actual: ${values.size}" }
+        validator(value)
         composeBYTE(value.ordinal.toByte())
+    }
 
-    open fun <E : Enum<E>> composeENUM16(value: E, values: Array<E>, validator: (E) -> Unit) =
+    private fun <E : Enum<E>> composeENUM16(value: E, values: Array<E>, validator: (E) -> Unit) {
+        require(values.size <= 65536) { "ENUM16 supports enums with up to 65536 instances, actual: ${values.size}" }
+        validator(value)
         composeSHORT(value.ordinal.toShort())
+    }
 
-    open fun <T> composeOBJECT(value: T?, po: ProtokolObject<T>, validator: T.() -> Unit) =
+    private fun <T> composeOBJECT(value: T?, po: ProtokolObject<T>, validator: T.() -> Unit) {
+        value?.validator()
         if (value != null) {
             composeBYTE(1)
             po.use(value, this)
         } else {
             composeBYTE(0)
         }
+    }
 
     fun composeSize(size: Int) = when {
         size < 0 -> throw IllegalArgumentException("size can't be negative: $size")
@@ -102,12 +119,13 @@ abstract class ProtokolComposer : Protokol {
         else -> throw IllegalArgumentException("size is too big: $size")
     }
 
-    open fun <T> composeList(
+    private fun <T> composeList(
         prop: KMutableProperty0<List<T>>,
         sizeChecker: (Int) -> Unit,
         composer: (T) -> Unit
     ) {
         val list = prop.get()
+        sizeChecker(list.size)
         composeSize(list.size)
         list.forEach { composer(it) }
     }
