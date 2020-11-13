@@ -12,7 +12,7 @@
 - [Variable Length Encoding](#variable-length-encoding)
 
 <a name="introduction"></a> 
-### Introduction
+## Introduction
 
 **Protokol** is a simple Kotlin Multiplatfrom library for data serializaton that allows for efficient binary encoding.
 **Protokol** only supports serialization of mutable class properties and uses reflection API for access.
@@ -132,10 +132,10 @@ if (errCode > 0) {
 ```
 
 <a name="supported-types"></a> 
-### Supported Types
+## Supported Types
 
 <a name="byte"></a> 
-#### BYTE
+### BYTE
 
 Declaration of Protokol's `BYTE` type serializes bound property of `Byte` type (a signed 8-bit integer) directly to a
 single byte.
@@ -147,7 +147,7 @@ BYTE(::b) { if (it.toInt() == 0) throw IllegalArgumentException("zero is not all
 ```
 
 <a name="bytearray"></a> 
-#### BYTEARRAY
+### BYTEARRAY
 
 Similar to `BYTE`, Protokol's `BYTEARRAY` type serializes a property of `ByteArray` type directly to array of bytes.
 But there's an important difference - array's size must also be encoded and prepend actual bytes data.
@@ -163,7 +163,7 @@ BYTEARRAY(::bytes)
 ```
 
 <a name="string"></a> 
-#### STRING
+### STRING
 
 **Protokol**'s `STRING` type serializes `String` property as `ByteArray` assuming UTF-8 encoding.
 Because of this `String` and `ByteArray` share same encoding and limits. Specifically, maximum size of
@@ -176,7 +176,7 @@ STRING(::str) { if (it.endsWith("ism")) throw IllegalArgumentException("Toxic!")
 ```
 
 <a name="boolean"></a> 
-#### BOOLEAN
+### BOOLEAN
 
 Properties of `Boolean` type can be serialized using **Protokol**'s `BOOLEAN` type declaration. `BOOLEAN` encodes
 boolean value as single byte: `0` for `false` and `1` for `true`. In the case of class with many `Boolean` properties
@@ -190,7 +190,7 @@ BOOLEAN(::b)
 ```
 
 <a name="bitset8"></a> 
-#### BITSET8
+### BITSET8
 
 **Protokol** allows to serialize a `Boolean` field as specific bit of the single byte with its `BITSET8` type.
 
@@ -226,7 +226,7 @@ object BitsResultProtokolObject : ProtokolObject<BitsResult> {
 supporting existing binary formats that make use of bitsets.
 
 <a name="short-int-long"></a>
-#### SHORT, INT, LONG
+### SHORT, INT, LONG
 
 Properties of `Short` (16-bit signed integer), `Int` (32-bit signed integer) and `Long` (64-bit signed integer) types
 can be serialized using **Protokol**'s respective `SHORT`, `INT` and `LONG` type declarations.
@@ -242,7 +242,7 @@ LONG(::l) { if (it > 10_000_000_000) throw IllegalArgumentException("value can't
 ``` 
 
 <a name="enum8-and-enum16"></a>
-#### ENUM8 and ENUM16
+### ENUM8 and ENUM16
 
 **Protokol** supports serialization of `Enum` properties. For this enum constant's `ordinal: Int` value is used.
 When deserialing enum's `ordinal` value is parsed as Int and then used as index in the provided `Enum.values()`
@@ -290,7 +290,7 @@ ENUM8(::errCode, ErrorCode.values())
 ```
 
 <a name="object"></a>
-#### OBJECT
+### OBJECT
 
 **Protokol**'s `OBJECT` type is used for serialization of field of any reference type `T` that supports **Protokol**
 (that is provides implementation of `ProtokolObject<T>`). `OBJECT` declaration takes corresponding `ProtokolObject`
@@ -352,7 +352,7 @@ special _marker_ byte indicating whether it is a null or not. It only takes a si
 `null` field.
 
 <a name="list-types"></a>
-#### List types
+### List types
 
 **Protokol** supports serialization of properties of `List<T>` type, where `T` is one of the supported basic types:
 `Byte`, `ByteArray`, `String`, `Boolean`, `Short`, `Int`, `Long`, `Enum`; or any other type which class has
@@ -395,7 +395,7 @@ object ListResultProtokolObject : ProtokolObject<ListResult> {
 ```
 
 <a name="variable-length-encoding"></a>
-### Variable Length Encoding
+## Variable Length Encoding
 
 To parse `ByteArray` or `List<T>` the parser must know its size, that is how many bytes or list's elements will
 follow. To allow for this, **Protokol** encodes integer number for size as prefix byte(s) to `ByteArray` or `List` data
