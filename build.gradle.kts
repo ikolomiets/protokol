@@ -14,7 +14,7 @@ kotlin {
             kotlinOptions.jvmTarget = "1.8"
         }
     }
-    js {
+    js(IR) {
         browser {
             testTask {
                 useKarma {
@@ -23,6 +23,7 @@ kotlin {
                 }
             }
         }
+        binaries.executable()
     }
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")

@@ -21,7 +21,7 @@ class LongTest {
     object StrictLongDataProtokolObject : ProtokolObject<LongData> {
         override fun use(value: LongData, p: Protokol) = with(p) {
             with(value) {
-                LONG(::l) { if (it == 0.toLong()) throw IllegalArgumentException("value can't be 0") }
+                LONG(::l) { if (it == 0L) throw IllegalArgumentException("value can't be 0") }
             }
         }
 
