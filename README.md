@@ -14,14 +14,14 @@
 <a name="introduction"></a> 
 ## Introduction
 
-**Protokol** is a simple Kotlin Multiplatfrom library for data serializaton that allows for efficient binary encoding.
+**Protokol** is a simple Kotlin Multiplatfrom library for data serialization that allows for efficient binary encoding.
 **Protokol** only supports serialization of mutable class properties and uses reflection API for access.
 
 To achieve efficient data encoding **Protokol** employs the concept of _dynamic format_ where values of previously
 composed or parsed fields may affect the format of the fields that follow (in this document, Kotlin class properties
 often be referred as _fields_). To define the logic of such serialization format **Protokol** offers type-safe DSL.
 
-**Protokol** supports serializatioin of basic Kotlin types such as: `Byte`, `ByteArray`, `String`,
+**Protokol** supports serialization of basic Kotlin types such as: `Byte`, `ByteArray`, `String`,
 `Boolean`, `Short`, `Int`, `Long` and `Enum`. Also supported are aggregate types such as
 `List<T>` and `OBJECT` (i.e. field of any class that supports **Protokol**). Lastly, **Protokol** has special
 support for bitsets.
@@ -91,7 +91,7 @@ interface ProtokolObject<T> {
 }
 ```
 
-The `create(): T` method is used during parsing to create new instance of `T`.
+The `create(): T` method is used during parsing to create a new instance of `T`.
 The `use(value: T, p: Protokol)` method is where the **Protokol** format is defined.
 Using Kotlin's `with()` function to have both `value: T` and `p: Protokol` parameters as implicit receivers,
 together with `::` operator to reference **value** property as `KMutableProperty0<T>` allows to express serialization
@@ -116,9 +116,9 @@ type. Reference to an instance of `KMutableProperty0<V>` allows for serializatio
 value, and for deserialization code to _set_ property's value.
 
 In **Protokol** DSL, any type declaration clause can optionally be given `(T) -> Unit` lambda to perform validation of
-the property's value. For invalid value lambda can throw the exception to stop further (de)serialization.
+the property's value. For invalid values lambda can throw the exception to stop further (de)serialization.
 During serialization such lambda will be called with property's value as an argument before it will be deserialized.
-When deserializing this labmda will be called with deserealized value before it will be set to a property.
+When deserializing this lambda will be called with deserialized value before it will be set to a property.
 
 This is how **Protokol** enforces non-negative values of `errCode: Int` by providing validation code block (lambda):
 
@@ -149,12 +149,12 @@ BYTE(::b) { if (it.toInt() == 0) throw IllegalArgumentException("zero is not all
 <a name="bytearray"></a> 
 ### BYTEARRAY
 
-Similar to `BYTE`, Protokol's `BYTEARRAY` type serializes a property of `ByteArray` type directly to array of bytes.
+Similar to `BYTE`, Protokol's `BYTEARRAY` type serializes a property of `ByteArray` type directly to an array of bytes.
 But there's an important difference - array's size must also be encoded and prepend actual bytes data.
-This allows parser to know how many bytes to parse, and also create properly sized array to have them copied into.
-To serialize integer number of array's size **Protokol** uses a technique called _Variable Length Encoding_
-(VLE for short). **Protokol** also uses VLE for variety of its `List<T>` types to encode list's size.
-VLE limits maximum size of `ByteArray` to 1Gb.
+This allows the parser to know how many bytes to parse, and also create a properly sized array to have them copied into.
+To serialize an integer number of array's size **Protokol** uses a technique called _Variable Length Encoding_
+(VLE for short). **Protokol** also uses VLE for a variety of its `List<T>` types to encode list's size.
+VLE limits the maximum size of `ByteArray` to 1Gb.
 
 This is how you bind `bytes: ByteArray` property as **Protokol**'s `BYTEARRAY`:
 
@@ -166,7 +166,7 @@ BYTEARRAY(::bytes)
 ### STRING
 
 **Protokol**'s `STRING` type serializes `String` property as `ByteArray` assuming UTF-8 encoding.
-Because of this `String` and `ByteArray` share same encoding and limits. Specifically, maximum size of
+Because of this `String` and `ByteArray` share the same encoding and limits. Specifically, maximum size of
 `String` (in bytes) as imposed by Variable Length Encoding is 1Gb.
 
 The example below shows how to bind `str: String` property as **Protokol**'s `STRING` with optional validation block:
@@ -179,7 +179,7 @@ STRING(::str) { if (it.endsWith("ism")) throw IllegalArgumentException("Toxic!")
 ### BOOLEAN
 
 Properties of `Boolean` type can be serialized using **Protokol**'s `BOOLEAN` type declaration. `BOOLEAN` encodes
-boolean value as single byte: `0` for `false` and `1` for `true`. In the case of class with many `Boolean` properties
+boolean value as a single byte: `0` for `false` and `1` for `true`. In the case of a class with many `Boolean` properties
 to be serialized you may consider using **Protokol**'s `BITSET8` type that allows using individual bits to store
 boolean values.
 
@@ -192,9 +192,9 @@ BOOLEAN(::b)
 <a name="bitset8"></a> 
 ### BITSET8
 
-**Protokol** allows to serialize a `Boolean` field as specific bit of the single byte with its `BITSET8` type.
+**Protokol** allows serializing a `Boolean` field as a specific bit of the single byte with its `BITSET8` type.
 
-In the following example `BitsResult` class has three `Boolean` fields that will be serializaed as bits #0, #1 and #5:
+In the following example `BitsResult` class has three `Boolean` fields that will be serialized as bits #0, #1 and #5:
 
 ```Kotlin
 data class BitsResult(
@@ -245,10 +245,10 @@ LONG(::l) { if (it > 10_000_000_000) throw IllegalArgumentException("value can't
 ### ENUM8 and ENUM16
 
 **Protokol** supports serialization of `Enum` properties. For this enum constant's `ordinal: Int` value is used.
-When deserialing enum's `ordinal` value is parsed as Int and then used as index in the provided `Enum.values()`
+When deserializing enum's `ordinal` value is parsed as Int and then used as index in the provided `Enum.values()`
 array to get corresponding enum constant. 
 
-In **Protokol** enums can be declared as either `ENUM8` or `ENUM16` type. `ENUM8` uses a single byte to encode enum's
+In **Protokol** enums can be declared as either `ENUM8` or `ENUM16` types. `ENUM8` uses a single byte to encode enum's
 ordinal value and supports enums with up to 256 constants, where `ENUM16` uses two bytes to encode ordinal and supports
 enums with up to 65536 constants.
 
@@ -292,8 +292,8 @@ ENUM8(::errCode, ErrorCode.values())
 <a name="object"></a>
 ### OBJECT
 
-**Protokol**'s `OBJECT` type is used for serialization of field of any reference type `T` that supports **Protokol**
-(that is provides implementation of `ProtokolObject<T>`). `OBJECT` declaration takes corresponding `ProtokolObject`
+**Protokol**'s `OBJECT` type is used for serialization of fields of any reference type `T` that supports **Protokol**
+(i.e. provides implementation of `ProtokolObject<T>`). `OBJECT` declaration takes corresponding `ProtokolObject`
 instance as its second argument.
 
 The following example of `ComplexResult` class demonstrates serialization of its `value: ComplexValue` property:
@@ -340,14 +340,14 @@ object ComplexValueProtokolObject : ProtokolObject<ComplexValue> {
 ```
 
 The `ComplexValueProtokolObject` class enables **Protokol** support for `ComplexValue` class.
-`ComplexResultProtokolObject` uses `OBJECT` decalration to bind `cv: ComplexValue?` field:
+`ComplexResultProtokolObject` uses `OBJECT` declaration to bind `cv: ComplexValue?` field:
 
 ```Kotlin
 OBJECT(::cv, ComplexValueProtokolObject)
 ```
 
-**Protokol**'s `OBJECT` is the only type that requires nullable field for binding (i.e. field must be decalred as `T?`).
-This allows simple and efficient serialization of the optional fields. When serizalizing an `OBJECT` first goes
+**Protokol**'s `OBJECT` is the only type that requires a nullable field for binding (i.e. field must be declared as `T?`).
+This allows simple and efficient serialization of the optional fields. When serializing an `OBJECT` first goes
 special _marker_ byte indicating whether it is a null or not. It only takes a single (marker) byte to serialize
 `null` field.
 
@@ -402,14 +402,14 @@ follow. To allow for this, **Protokol** encodes integer number for size as prefi
 using _Variable Length Encoding_. VLE allows for single byte to encode sizes up to 127, two bytes for sizes up to 16383
 and four bytes for sizes up to 1073741824.
 
-![Encoding of ByteArrays Aad Lists](doc/EncodingOfByteArraysAndLists.svg)
+![Encoding of ByteArrays And Lists](doc/EncodingOfByteArraysAndLists.svg)
 
 To know how many bytes encode size, parser first checks the highest bit (#7) of the first byte. If that bit is zero,
-then size is encoded with single byte using remaining 7 bits. Otherwise next bit is checked. If bit #6 is 0, then
+then size is encoded with a single byte using the remaining 7 bits. Otherwise the next bit is checked. If bit #6 is 0, then
 size is encoded with 2 bytes using 14 bits. If bit #6 is 1, then size is encoded with 4 bytes using 30 bits.
 
 ![Variable Length Encoding](doc/VLE.svg)
 
 VLE is especially useful for efficient encoding of many small strings (in **Protokol** backing type for serialized
 `String` is `ByteArray`) and lists. If size of string's byte array or list is less than 128, it only takes extra
-byte to encode it. Also, VLE naturally allows encoding of emtpy strings and lists with just a single zero byte.
+byte to encode it. Also, VLE naturally allows encoding of empty strings and lists with just a single zero byte.
