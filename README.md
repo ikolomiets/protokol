@@ -19,6 +19,11 @@
 **Protokol** is a simple Kotlin Multiplatfrom library for data serialization that allows for efficient binary encoding.
 **Protokol** only supports serialization of mutable class properties and uses reflection API for access.
 
+Using Multiplatfrom Kotlin to define model classes in combination with **Protokol** for data serialization enables
+creation of multiplatform libraries of business logic that can be used in wide range of applications written in
+different languages across many platforms (e.g. JavaScript/TypeScript in browser or Node.js, Java/Kotlin on JVM,
+C++/Swift/ObjectiveC on native platforms such as Android, iOS, MacOS, Linux or Windows).     
+
 To achieve efficient data encoding **Protokol** employs the concept of _dynamic format_ where values of previously
 composed or parsed fields may affect the format of the fields that follow (in this document, Kotlin class properties
 often be referred as _fields_). To define the logic of such serialization format **Protokol** offers type-safe DSL.
