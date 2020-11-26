@@ -1,13 +1,15 @@
 import java.util.*
+import com.jfrog.bintray.gradle.tasks.*
+import org.gradle.api.publish.maven.internal.artifact.*
 
 plugins {
-    kotlin("multiplatform") version "1.4.10"
+    kotlin("multiplatform") version "1.4.20"
     `maven-publish`
     id("com.jfrog.bintray") version "1.8.5"
 }
 
 group = "com.electrit"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -65,17 +67,33 @@ kotlin {
         val nativeTest by getting
     }
 
-    configure(listOf(targets["metadata"], jvm(), js())) {
-        mavenPublication {
-            val targetPublication = this@mavenPublication
+    val publicationsFromMainHost = listOf(jvm(), js()).map { it.name } + "kotlinMultiplatform"
+    publishing {
+        publications {
+            matching { it.name in publicationsFromMainHost }.all {
+                val targetPublication = this@all
 
-            println("mavenPublication: ${targetPublication.name}")
+                println("mavenPublication: ${targetPublication.name}")
 
-            tasks.withType<AbstractPublishToMaven>()
-/* FIXME had to modify example from https://kotlinlang.org/docs/reference/mpp-publish-lib.html
-                .matching { it.publication == targetPublication }
-                .all { onlyIf { findProperty("isMainHost") == "true" } }
-*/
+                tasks.withType<AbstractPublishToMaven>()
+                    .matching { it.publication == targetPublication }
+                    .configureEach { onlyIf { /*findProperty("isMainHost") == "true"*/ true } }
+            }
+        }
+    }
+
+    tasks.withType<BintrayUploadTask> {
+        doFirst
+            publishing.publications
+                .filterIsInstance<MavenPublication>()
+                .forEach { publication ->
+                    val moduleFile = buildDir.resolve("publications/${publication.name}/module.json")
+                    if (moduleFile.exists()) {
+                        publication.artifact(object : FileBasedMavenArtifact(moduleFile) {
+                            override fun getDefaultExtension() = "module"
+                        })
+                    }
+                }
         }
     }
 }
@@ -86,7 +104,7 @@ bintray {
 
     publish = true
 
-    setPublications("metadata", "jvm", "js")
+    setPublications("kotlinMultiplatform", "jvm", "js")
 
     pkg.apply {
         repo = "maven"
