@@ -83,7 +83,7 @@ kotlin {
     }
 
     tasks.withType<BintrayUploadTask> {
-        doFirst
+        doFirst {
             publishing.publications
                 .filterIsInstance<MavenPublication>()
                 .forEach { publication ->
