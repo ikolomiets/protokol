@@ -252,7 +252,7 @@ LONG(::l) { if (it > 10_000_000_000) throw IllegalArgumentException("value can't
 <a name="float-double"></a>
 ### FLOAT, DOUBLE
 
-Since version 1.0.2 **Protokol** supports `Float` and `Double` types.
+Since version 1.1.0 **Protokol** supports `Float` and `Double` types.
 `Float` number is serialized as `Int` (according to the IEEE 754 floating-point "single format" bit layout), while
 `Double` number is serialized as `Long` (according to the IEEE 754 floating-point "double format" bit layout).
 
