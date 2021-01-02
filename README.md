@@ -8,6 +8,7 @@
     - [BOOLEAN](#boolean)
     - [BITSET8](#bitset8)
     - [SHORT, INT, LONG](#short-int-long)
+    - [FLOAT, DOUBLE](#float-double)
     - [ENUM8 and ENUM16](#enum8-and-enum16)
     - [OBJECT](#object)
     - [List types](#list-types)
@@ -29,7 +30,7 @@ composed or parsed fields may affect the format of the fields that follow (in th
 often be referred as _fields_). To define the logic of such serialization format **Protokol** offers type-safe DSL.
 
 **Protokol** supports serialization of basic Kotlin types such as: `Byte`, `ByteArray`, `String`,
-`Boolean`, `Short`, `Int`, `Long` and `Enum`. Also supported are aggregate types such as
+`Boolean`, `Short`, `Int`, `Long`, `Float`, `Double` and `Enum`. Also supported are aggregate types such as
 `List<T>` and `OBJECT` (i.e. field of any class that supports **Protokol**). Lastly, **Protokol** has special
 support for bitsets.
 
@@ -247,6 +248,17 @@ SHORT(::s) { if (it.toInt() == 0) throw IllegalArgumentException("value can't be
 INT(::i) { if (it < 0) throw IllegalArgumentException("value can't be negative") }
 LONG(::l) { if (it > 10_000_000_000) throw IllegalArgumentException("value can't be greater than 10 Billions") }
 ``` 
+
+<a name="float-double"></a>
+### FLOAT, DOUBLE
+
+Since version 1.0.2 **Protokol** supports `Float` and `Double` types.
+`Float` number is serialized as `Int` (according to the IEEE 754 floating-point "single format" bit layout), while
+`Double` number is serialized as `Long` (according to the IEEE 754 floating-point "double format" bit layout).
+
+**Note** that on JS platform `Float` numbers may be represented differently.
+This is because in Kotlin/JS Float range is wider than "single format" bit layout can represent.
+See <https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/to-bits.html> for more details.
 
 <a name="enum8-and-enum16"></a>
 ### ENUM8 and ENUM16

@@ -63,8 +63,6 @@ class BitsetTest {
     fun test() {
         fun assert(bitset: BitsetData, po: ProtokolObject<BitsetData>) {
             val bytes = ByteArrayProtokolCodec.encode(bitset, po)
-            println("bytes size=${bytes.size}")
-            println("bytes[0]=${(bytes[0].toInt() and 0xff).toString(2)}")
             val data = ByteArrayProtokolCodec.decode(bytes, po)
             assertEquals(bitset, data)
         }

@@ -21,7 +21,7 @@ abstract class ProtokolParser : Protokol {
                 ((parseBYTE().toInt() and 0xff) shl 8) or
                 (parseBYTE().toInt() and 0xff)
 
-    private fun parseINT64(): Long =
+    private fun parseLONG(): Long =
         ((parseBYTE().toLong() and 0xffL) shl 56) or
                 ((parseBYTE().toLong() and 0xffL) shl 48) or
                 ((parseBYTE().toLong() and 0xffL) shl 40) or
@@ -30,6 +30,10 @@ abstract class ProtokolParser : Protokol {
                 ((parseBYTE().toLong() and 0xffL) shl 16) or
                 ((parseBYTE().toLong() and 0xffL) shl 8) or
                 (parseBYTE().toLong() and 0xffL)
+
+    private fun parseFLOAT(): Float = Float.fromBits(parseINT())
+
+    private fun parseDOUBLE(): Double = Double.fromBits(parseLONG())
 
     private fun <E : Enum<E>> parseENUM8(values: Array<E>): E {
         require(values.size <= 256) { "ENUM8 allows for up to 256 values, actual: ${values.size}" }
@@ -149,13 +153,28 @@ abstract class ProtokolParser : Protokol {
     ) = parseList(prop, sizeChecker, validator) { parseINT() }
 
     override fun LONG(prop: KMutableProperty0<Long>, validator: (Long) -> Unit) =
-        validateAndSet(prop, validator) { parseINT64() }
+        validateAndSet(prop, validator) { parseLONG() }
 
     override fun LONGS(
         prop: KMutableProperty0<List<Long>>,
         sizeChecker: (Int) -> Unit,
         validator: (Long) -> Unit
-    ) = parseList(prop, sizeChecker, validator) { parseINT64() }
+    ) = parseList(prop, sizeChecker, validator) { parseLONG() }
+
+    override fun FLOAT(prop: KMutableProperty0<Float>, validator: (Float) -> Unit) =
+        validateAndSet(prop, validator) { parseFLOAT() }
+
+    override fun FLOATS(prop: KMutableProperty0<List<Float>>, sizeChecker: (Int) -> Unit, validator: (Float) -> Unit) =
+        parseList(prop, sizeChecker, validator) { parseFLOAT() }
+
+    override fun DOUBLE(prop: KMutableProperty0<Double>, validator: (Double) -> Unit) =
+        validateAndSet(prop, validator) { parseDOUBLE() }
+
+    override fun DOUBLES(
+        prop: KMutableProperty0<List<Double>>,
+        sizeChecker: (Int) -> Unit,
+        validator: (Double) -> Unit
+    ) = parseList(prop, sizeChecker, validator) { parseDOUBLE() }
 
     override fun <E : Enum<E>> ENUM8(prop: KMutableProperty0<E>, values: Array<E>, validator: (E) -> Unit) =
         validateAndSet(prop, validator) { parseENUM8(values) }

@@ -49,6 +49,18 @@ interface Protokol {
 
     fun LONGS(prop: KMutableProperty0<List<Long>>, sizeChecker: (Int) -> Unit = {}, validator: (Long) -> Unit = {})
 
+    fun FLOAT(prop: KMutableProperty0<Float>, validator: (Float) -> Unit = {})
+
+    fun FLOATS(prop: KMutableProperty0<List<Float>>, sizeChecker: (Int) -> Unit = {}, validator: (Float) -> Unit = {})
+
+    fun DOUBLE(prop: KMutableProperty0<Double>, validator: (Double) -> Unit = {})
+
+    fun DOUBLES(
+        prop: KMutableProperty0<List<Double>>,
+        sizeChecker: (Int) -> Unit = {},
+        validator: (Double) -> Unit = {}
+    )
+
     fun <E : Enum<E>> ENUM8(prop: KMutableProperty0<E>, values: Array<E>, validator: (E) -> Unit = {})
 
     fun <E : Enum<E>> ENUM8S(

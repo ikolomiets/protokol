@@ -57,7 +57,7 @@ abstract class ProtokolComposer : Protokol {
         composeBYTE(value.toByte())
     }
 
-    private fun composeINT(value: Int, validator: (Int) -> Unit) {
+    private fun composeINT(value: Int, validator: (Int) -> Unit = {}) {
         validator(value)
         composeBYTE((value ushr 24).toByte())
         composeBYTE((value ushr 16).toByte())
@@ -65,7 +65,7 @@ abstract class ProtokolComposer : Protokol {
         composeBYTE(value.toByte())
     }
 
-    private fun composeLONG(value: Long, validator: (Long) -> Unit) {
+    private fun composeLONG(value: Long, validator: (Long) -> Unit = {}) {
         validator(value)
         composeBYTE((value ushr 56).toByte())
         composeBYTE((value ushr 48).toByte())
@@ -75,6 +75,16 @@ abstract class ProtokolComposer : Protokol {
         composeBYTE((value ushr 16).toByte())
         composeBYTE((value ushr 8).toByte())
         composeBYTE(value.toByte())
+    }
+
+    private fun composeFLOAT(value: Float, validator: (Float) -> Unit) {
+        validator(value)
+        composeINT(value.toBits())
+    }
+
+    private fun composeDOUBLE(value: Double, validator: (Double) -> Unit) {
+        validator(value)
+        composeLONG(value.toBits())
     }
 
     private fun <E : Enum<E>> composeENUM8(value: E, values: Array<E>, validator: (E) -> Unit) {
@@ -192,6 +202,21 @@ abstract class ProtokolComposer : Protokol {
         sizeChecker: (Int) -> Unit,
         validator: (Long) -> Unit
     ) = composeList(prop, sizeChecker) { composeLONG(it, validator) }
+
+    override fun FLOAT(prop: KMutableProperty0<Float>, validator: (Float) -> Unit) =
+        composeFLOAT(prop.get(), validator)
+
+    override fun FLOATS(prop: KMutableProperty0<List<Float>>, sizeChecker: (Int) -> Unit, validator: (Float) -> Unit) =
+        composeList(prop, sizeChecker) { composeFLOAT(it, validator) }
+
+    override fun DOUBLE(prop: KMutableProperty0<Double>, validator: (Double) -> Unit) =
+        composeDOUBLE(prop.get(), validator)
+
+    override fun DOUBLES(
+        prop: KMutableProperty0<List<Double>>,
+        sizeChecker: (Int) -> Unit,
+        validator: (Double) -> Unit
+    ) = composeList(prop, sizeChecker) { composeDOUBLE(it, validator) }
 
     override fun <E : Enum<E>> ENUM8(prop: KMutableProperty0<E>, values: Array<E>, validator: (E) -> Unit) =
         composeENUM8(prop.get(), values, validator)
