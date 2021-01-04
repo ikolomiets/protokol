@@ -109,4 +109,10 @@ interface Protokol {
         ) -> Unit = { _, _, _, _, _, _, _, _ -> }
     )
 
+    fun <K, V> MAP(
+        prop: KMutableProperty0<Map<K, V>>,
+        po: ProtokolObject<ProtokolMapEntry<K, V>>
+    )
 }
+
+class ProtokolMapEntry<K, V>(override var key: K, override var value: V) : Map.Entry<K, V>

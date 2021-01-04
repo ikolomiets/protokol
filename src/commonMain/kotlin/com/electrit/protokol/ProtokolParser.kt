@@ -249,5 +249,15 @@ abstract class ProtokolParser : Protokol {
         b7?.set(bit7)
     }
 
+    override fun <K, V> MAP(prop: KMutableProperty0<Map<K, V>>, po: ProtokolObject<ProtokolMapEntry<K, V>>) {
+        val map = mutableMapOf<K, V>()
+        val size = parseSize()
+        repeat(size) {
+            val entry = po.create()
+            po.use(entry, this)
+            map[entry.key] = entry.value
+        }
+        prop.set(map)
+    }
 }
 

@@ -279,4 +279,9 @@ abstract class ProtokolComposer : Protokol {
         validator
     )
 
+    override fun <K, V> MAP(prop: KMutableProperty0<Map<K, V>>, po: ProtokolObject<ProtokolMapEntry<K, V>>) {
+        val map = prop.get()
+        composeSize(map.size)
+        map.forEach { po.use(ProtokolMapEntry(it.key, it.value), this) }
+    }
 }
