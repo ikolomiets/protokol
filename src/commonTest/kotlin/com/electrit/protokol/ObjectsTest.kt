@@ -71,7 +71,7 @@ class ObjectsTest {
         override fun create() = ComplexData()
     }
 
-    class ObjectsData(var list: List<ComplexData> = emptyList())
+    data class ObjectsData(var list: List<ComplexData> = emptyList())
 
     object ObjectsDataProtokolObject : ProtokolObject<ObjectsData> {
         override fun use(value: ObjectsData, p: Protokol) = with(p) {
@@ -83,30 +83,30 @@ class ObjectsTest {
         override fun create() = ObjectsData()
     }
 
-    object StrictObjectsDataProtokolObject : ProtokolObject<ObjectsData> {
-        override fun use(value: ObjectsData, p: Protokol) = with(p) {
-            with(value) {
-                OBJECTS(::list, ComplexDataProtokolObject, {
-                        size -> if (size == 0) throw IllegalArgumentException("size can't be 0")
-                }) {
-                    if (name == "test") throw IllegalArgumentException("List elements can't have name='test'")
-                }
-            }
-        }
+    private val sizeChecker: (Int) -> Unit = { size ->
+        if (size == 0) throw IllegalArgumentException("size can't be 0")
+    }
 
-        override fun create() = ObjectsData()
+    private val validator: ComplexData.() -> Unit = {
+        if (name == "test") throw IllegalArgumentException("List elements can't have name='test'")
     }
 
     @Test
     fun test() {
-        fun assert(list: List<ComplexData>, po: ProtokolObject<ObjectsData>) {
-            val bytes = ByteArrayProtokolCodec.encode(ObjectsData(list), po)
-            val data = ByteArrayProtokolCodec.decode(bytes, po)
-            assertEquals(list, data.list)
+        fun assert(list: List<ComplexData>) {
+            val bytes = ByteArrayProtokolCodec.encodeList(list, ComplexDataProtokolObject)
+            val decodedList = ByteArrayProtokolCodec.decodeList(bytes, ComplexDataProtokolObject)
+            assertEquals(list, decodedList)
         }
 
-        assert(emptyList(), ObjectsDataProtokolObject)
-        assertFailsWith<IllegalArgumentException> {  assert(emptyList(), StrictObjectsDataProtokolObject) }
+        fun strictAssert(list: List<ComplexData>) {
+            val bytes = ByteArrayProtokolCodec.encodeList(list, ComplexDataProtokolObject, sizeChecker, validator)
+            val decodedList = ByteArrayProtokolCodec.decodeList(bytes, ComplexDataProtokolObject)
+            assertEquals(list, decodedList)
+        }
+
+        assert(emptyList())
+        assertFailsWith<IllegalArgumentException> {  strictAssert(emptyList()) }
 
         val list = List(128) {
             val data = Data()
@@ -121,36 +121,37 @@ class ObjectsTest {
             complexData
         }
 
-        assert(list, ObjectsDataProtokolObject)
-        assertFailsWith<IllegalArgumentException> { assert(list, StrictObjectsDataProtokolObject) }
+        val data = ObjectsData(list)
+        val bytes = ByteArrayProtokolCodec.encode(data, ObjectsDataProtokolObject)
+        val decodedData = ByteArrayProtokolCodec.decode(bytes, ObjectsDataProtokolObject)
+        assertEquals(data, decodedData)
+
+        assert(list)
+        assertFailsWith<IllegalArgumentException> { strictAssert(list) }
     }
 
     @Test
     fun testParseError() {
         assertFailsWith<IllegalArgumentException> {
-            ByteArrayProtokolCodec.decode(
-                ByteArrayProtokolCodec.encode(ObjectsData(emptyList()), ObjectsDataProtokolObject),
-                StrictObjectsDataProtokolObject
-            )
+            val bytes = ByteArrayProtokolCodec.encodeList(emptyList(), ComplexDataProtokolObject)
+            ByteArrayProtokolCodec.decodeList(bytes, ComplexDataProtokolObject, sizeChecker, validator)
         }
 
         assertFailsWith<IllegalArgumentException> {
-            ByteArrayProtokolCodec.decode(
-                ByteArrayProtokolCodec.encode(ObjectsData(List(1) {
-                    val data = Data()
-                    data.bytes = Random.nextBytes(Random.nextInt(150))
-                    data.string = Random.nextBytes(Random.nextInt(150)).decodeToString()
+            val bytes = ByteArrayProtokolCodec.encodeList(List(1) {
+                val data = Data()
+                data.bytes = Random.nextBytes(Random.nextInt(150))
+                data.string = Random.nextBytes(Random.nextInt(150)).decodeToString()
 
 
-                    val complexData = ComplexData()
-                    complexData.name = "test"
-                    complexData.data = data
-                    complexData.bytes = Random.nextBytes(Random.nextInt(150))
+                val complexData = ComplexData()
+                complexData.name = "test"
+                complexData.data = data
+                complexData.bytes = Random.nextBytes(Random.nextInt(150))
 
-                    complexData
-                }), ObjectsDataProtokolObject),
-                StrictObjectsDataProtokolObject
-            )
+                complexData
+            }, ComplexDataProtokolObject)
+            ByteArrayProtokolCodec.decodeList(bytes, ComplexDataProtokolObject, sizeChecker, validator)
         }
     }
 

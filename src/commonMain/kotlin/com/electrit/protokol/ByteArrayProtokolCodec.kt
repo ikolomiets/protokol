@@ -4,23 +4,37 @@ object ByteArrayProtokolCodec {
 
     private class ListWrapper<T>(var value: List<T> = emptyList())
 
-    private class ListWrapperProtokolObject<T>(val po: ProtokolObject<T>) : ProtokolObject<ListWrapper<T>> {
+    private class ListWrapperProtokolObject<T>(
+        val po: ProtokolObject<T>,
+        val sizeChecker: (Int) -> Unit,
+        val validator: T.() -> Unit
+    ) : ProtokolObject<ListWrapper<T>> {
         override fun use(value: ListWrapper<T>, p: Protokol) = with(p) {
             with(value) {
-                OBJECTS(::value, po)
+                OBJECTS(::value, po, sizeChecker, validator)
             }
         }
 
         override fun create() = ListWrapper<T>()
     }
 
-    fun <T> encodeList(value: List<T>, po: ProtokolObject<T>): ByteArray {
+    fun <T> encodeList(
+        value: List<T>,
+        po: ProtokolObject<T>,
+        sizeChecker: (Int) -> Unit = {},
+        validator: T.() -> Unit = {}
+    ): ByteArray {
         val listWrapper = ListWrapper(value)
-        return encode(listWrapper, ListWrapperProtokolObject(po))
+        return encode(listWrapper, ListWrapperProtokolObject(po, sizeChecker, validator))
     }
 
-    fun <T> decodeList(bytes: ByteArray, po: ProtokolObject<T>): List<T> {
-        val listWrapper = decode(bytes, ListWrapperProtokolObject(po))
+    fun <T> decodeList(
+        bytes: ByteArray,
+        po: ProtokolObject<T>,
+        sizeChecker: (Int) -> Unit = {},
+        validator: T.() -> Unit = {}
+    ): List<T> {
+        val listWrapper = decode(bytes, ListWrapperProtokolObject(po, sizeChecker, validator))
         return listWrapper.value
     }
 

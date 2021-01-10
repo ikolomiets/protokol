@@ -12,6 +12,7 @@
     - [ENUM8 and ENUM16](#enum8-and-enum16)
     - [OBJECT](#object)
     - [List types](#list-types)
+    - [MAP](#map)
 - [Variable Length Encoding](#variable-length-encoding)
 
 <a name="introduction"></a> 
@@ -31,7 +32,7 @@ often be referred as _fields_). To define the logic of such serialization format
 
 **Protokol** supports serialization of basic Kotlin types such as: `Byte`, `ByteArray`, `String`,
 `Boolean`, `Short`, `Int`, `Long`, `Float`, `Double` and `Enum`. Also supported are aggregate types such as
-`List<T>` and `OBJECT` (i.e. field of any class that supports **Protokol**). Lastly, **Protokol** has special
+`List<T>`, `Map<K, V>` and `OBJECT` (i.e. field of any type which class supports **Protokol**). Lastly, **Protokol** has special
 support for bitsets.
 
 Here's an example of using **Protokol** to serialize simple `Result` class:
@@ -384,9 +385,6 @@ List types declarations may have optional `sizeChecker: (Int) -> Unit` lambda in
 `validator: (T) -> Unit` lambda (also optional) that is used to validate serialized list's size as well as each of its
 elements.
 
-Similar to `BYTEARRAY`, the List types prepend serialized data with list's size integer encoded using
-_Variable Length Encoding_. 
-
 Example below has ListResult's `values: List<Boolean>` property bound as **Protokol**'s `BOOLEANS` field:
 
 ```Kotlin
@@ -413,19 +411,163 @@ object ListResultProtokolObject : ProtokolObject<ListResult> {
 }
 ```
 
+For properties of `List<T>` type, where `T` is a complex type that comes with its own protocol object, the `OBJECTS`
+declaration should be used. Here's an example, where `Model` class has `users: List<User>` property: 
+
+```Kotlin
+data class User(var id: Long, var name: String)
+
+object UserProtokolObject : ProtokolObject<User> {
+    override fun use(value: User, p: Protokol) = with(p) {
+        with(value) {
+            LONG(::id)
+            STRING(::name)
+        }
+    }
+
+    override fun create() = User(0, "")
+}
+
+data class Model(var users: List<User>)
+
+object ModelProtokolObject : ProtokolObject<Model> {
+    override fun use(value: Model, p: Protokol) = with(p) {
+        with(value) {
+            OBJECTS(::users, UserProtokolObject)
+        }
+    }
+
+    override fun create() = Model(emptyList())
+}
+```
+
+`ByteArrayProtokolCodec` class offers a pair of convenience functions to encode/decode instances of `List<T>`
+where `T` is a complex type that has its own protocol object without a need for containing class and its protokol
+object (such as `Model` and `ModelProtokolObject`):
+
+```kotlin
+fun <T> encodeList(
+    value: List<T>,
+    po: ProtokolObject<T>,
+    sizeChecker: (Int) -> Unit = {},
+    validator: T.() -> Unit = {}
+): ByteArray
+
+fun <T> decodeList(
+    bytes: ByteArray,
+    po: ProtokolObject<T>,
+    sizeChecker: (Int) -> Unit = {},
+    validator: T.() -> Unit = {}
+): List<T>
+```
+
+This is how you can use `ByteArrayProtokolCodec` class to directly encode/decode instance of `List<User>`:
+
+```kotlin
+val users: List<User> = listOf(User(1, "user1"), User(2, "user2"), User(3, "user3"))
+val bytes: ByteArray = ByteArrayProtokolCodec.encodeList(users, UserProtokolObject)
+val decoded: List<User> = ByteArrayProtokolCodec.decodeList(bytes, UserProtokolObject)
+```
+
+Similar to `BYTEARRAY` the List types prepend serialized data with list's size integer number encoded using
+[Variable Length Encoding](#variable-length-encoding).
+
+<a name="map"></a>
+### MAP
+
+**Protokol** supports properties of `Map<K, V>` type with `MAP` declaration.
+Because internally **Protokol** serializes `Map<K, V>` types as `List<ProtokolMapEntry<K, V>>`, the `MAP`
+declaration requires protocol object that implements `ProtokolObject<ProtokolMapEntry<K, V>>` type.
+
+Here's an example of **Protokol** support for simple `Model` class with single property of `Map<Int, String>` type:
+
+```Kotlin
+class Model(var params: Map<Int, String>)
+
+object ModelProtokolObject : ProtokolObject<Model> {
+  override fun use(value: Model, p: Protokol) = with(p) {
+    with(value) {
+      MAP(::params, SimpleMapEntryProtokolObject)
+    }
+  }
+
+  override fun create() = Model(emptyMap())
+}
+
+object SimpleMapEntryProtokolObject : ProtokolObject<ProtokolMapEntry<Int, String>> {
+    override fun use(value: ProtokolMapEntry<Int, String>, p: Protokol) = with(p) {
+        with(value) {
+            INT(::key)
+            STRING(::value)
+        }
+    }
+
+    override fun create(): ProtokolMapEntry<Int, String> = ProtokolMapEntry(0, "")
+}
+```
+
+The `SimpleMapEntryProtokolObject` above defines serializaton of `key: K` and `value: V` properties of `ProtokolMapEntry<K, V>` class.
+
+`ByteArrayProtokolCodec` class offers two convenience methods to directly encode/decode instances of `Map<K, V>`
+without a need for containing class and its protocol object such as `Model` and `ModelProtokolObject` from above example:
+
+```Kotlin
+fun <K, V> encodeMap(value: Map<K, V>, po: ProtokolObject<ProtokolMapEntry<K, V>>): ByteArray
+
+fun <K, V> decodeMap(bytes: ByteArray, po: ProtokolObject<ProtokolMapEntry<K, V>>): Map<K, V>
+```
+
+This is how you can use `ByteArrayProtokolCodec` class to work with maps:
+
+```Kotlin
+val input: Map<Int, String> = mapOf(1 to "one", 2 to "two", 3 to "three")
+val bytes: ByteArray = ByteArrayProtokolCodec.encodeMap(input, SimpleMapEntryProtokolObject)
+val output: Map<Int, String> = ByteArrayProtokolCodec.decodeMap(bytes, SimpleMapEntryProtokolObject)
+```
+
+Here's an example of **Protokol** support for more complex `Map<String, Data?>` type that allows `null` as map's value
+(this is because `OBJECT` declaration supports `null` values):
+
+```Kotlin
+data class Data(var id: Int = 0, var name: String = "", var flag: Boolean = false)
+
+object DataProtokolObject : ProtokolObject<Data> {
+    override fun use(value: Data, p: Protokol) = with(p) {
+        with(value) {
+            INT(::id)
+            STRING(::name)
+            BOOLEAN(::flag)
+        }
+    }
+
+    override fun create() = Data()
+}
+
+object DataMapEntryProtokolObject : ProtokolObject<ProtokolMapEntry<String, Data?>> {
+    override fun use(value: ProtokolMapEntry<String, Data?>, p: Protokol) = with(p) {
+        with(value) {
+            STRING(::key)
+            OBJECT(::value, DataProtokolObject)
+        }
+    }
+
+    override fun create(): ProtokolMapEntry<String, Data?> = ProtokolMapEntry("", null)
+}
+```
+
 <a name="variable-length-encoding"></a>
 ## Variable Length Encoding
 
-To parse `ByteArray` or `List<T>` the parser must know its size, that is how many bytes or list's elements will
-follow. To allow for this, **Protokol** encodes integer number for size as prefix byte(s) to `ByteArray` or `List` data
-using _Variable Length Encoding_. VLE allows for single byte to encode sizes up to 127, two bytes for sizes up to 16383
-and four bytes for sizes up to 1073741824.
+To parse `ByteArray`, `List<T>` or `Map<K, V>` the parser must know its size, that is how many bytes or collection's
+elements will follow. To allow for this, **Protokol** encodes integer number for size as prefix byte(s) to `ByteArray`
+or `List` data using _Variable Length Encoding_. VLE allows for single byte to encode sizes up to 127, two bytes for
+sizes up to 16383 and four bytes for sizes up to 1073741824.
 
 ![Encoding of ByteArrays And Lists](doc/EncodingOfByteArraysAndLists.svg)
 
 To know how many bytes encode size, parser first checks the highest bit (#7) of the first byte. If that bit is zero,
-then size is encoded with a single byte using the remaining 7 bits. Otherwise the next bit is checked. If bit #6 is 0, then
-size is encoded with 2 bytes using 14 bits. If bit #6 is 1, then size is encoded with 4 bytes using 30 bits.
+then size is encoded with a single byte using the remaining 7 bits. Otherwise the next bit is checked. If bit #6 is 0,
+then size is encoded with 2 bytes using 14 bits. If bit #6 is 1, then size is encoded with 4 bytes using 30 bits.
 
 ![Variable Length Encoding](doc/VLE.svg)
 
