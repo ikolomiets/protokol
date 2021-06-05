@@ -1,15 +1,14 @@
 import java.util.*
-import com.jfrog.bintray.gradle.tasks.*
 import org.gradle.api.publish.maven.internal.artifact.*
 
 plugins {
-    kotlin("multiplatform") version "1.4.20"
+    kotlin("multiplatform") version "1.5.0"
     `maven-publish`
-    id("com.jfrog.bintray") version "1.8.5"
+    signing
 }
 
 group = "com.electrit"
-version = "1.2.0"
+version = "2.0.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -18,7 +17,9 @@ repositories {
 kotlin {
     jvm {
         compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
+            kotlinOptions {
+                jvmTarget = "1.8"
+            }
         }
     }
 
@@ -47,82 +48,99 @@ kotlin {
         val commonMain by getting
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test-common"))
-                implementation(kotlin("test-annotations-common"))
+                implementation(kotlin("test"))
             }
         }
         val jvmMain by getting
         val jvmTest by getting {
-            dependencies {
-                implementation(kotlin("test-junit"))
-            }
         }
         val jsMain by getting
         val jsTest by getting {
-            dependencies {
-                implementation(kotlin("test-js"))
-            }
         }
         val nativeMain by getting
         val nativeTest by getting
     }
+}
 
-    val publicationsFromMainHost = listOf(jvm(), js()).map { it.name } + "kotlinMultiplatform"
-    publishing {
-        publications {
-            matching { it.name in publicationsFromMainHost }.all {
-                val targetPublication = this@all
+// Stub secrets to let the project sync and build without the publication values set up
+ext["signing.keyId"] = null
+ext["signing.password"] = null
+ext["signing.secretKeyRingFile"] = null
+ext["ossrhUsername"] = null
+ext["ossrhPassword"] = null
 
-                println("mavenPublication: ${targetPublication.name}")
+// Grabbing secrets from local.properties file or from environment variables, which could be used on CI
+val secretPropsFile = project.rootProject.file("local.properties")
+if (secretPropsFile.exists()) {
+    secretPropsFile.reader().use {
+        Properties().apply {
+            load(it)
+        }
+    }.onEach { (name, value) ->
+        ext[name.toString()] = value
+    }
+} else {
+    ext["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
+    ext["signing.password"] = System.getenv("SIGNING_PASSWORD")
+    ext["signing.secretKeyRingFile"] = System.getenv("SIGNING_SECRET_KEY_RING_FILE")
+    ext["ossrhUsername"] = System.getenv("OSSRH_USERNAME")
+    ext["ossrhPassword"] = System.getenv("OSSRH_PASSWORD")
+}
 
-                tasks.withType<AbstractPublishToMaven>()
-                    .matching { it.publication == targetPublication }
-                    .configureEach { onlyIf { /*findProperty("isMainHost") == "true"*/ true } }
+val javadocJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("javadoc")
+}
+
+fun getExtraString(name: String) = ext[name]?.toString()
+
+publishing {
+    // Configure maven central repository
+    repositories {
+        maven {
+            name = "sonatype"
+            setUrl("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            //setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = getExtraString("ossrhUsername")
+                password = getExtraString("ossrhPassword")
             }
         }
     }
 
-    tasks.withType<BintrayUploadTask> {
-        doFirst {
-            publishing.publications
-                .filterIsInstance<MavenPublication>()
-                .forEach { publication ->
-                    val moduleFile = buildDir.resolve("publications/${publication.name}/module.json")
-                    if (moduleFile.exists()) {
-                        publication.artifact(object : FileBasedMavenArtifact(moduleFile) {
-                            override fun getDefaultExtension() = "module"
-                        })
-                    }
+    // Configure all publications
+    publications.withType<MavenPublication> {
+
+        // Stub javadoc.jar artifact
+        artifact(javadocJar.get())
+
+        // Provide artifacts information requited by Maven Central
+        pom {
+            name.set("Protokol")
+            description.set("Kotlin Multiplatform serialization library")
+            url.set("https://github.com/ikolomiets/protokol")
+
+            licenses {
+                license {
+                    name.set("MIT")
+                    url.set("https://opensource.org/licenses/MIT")
                 }
+            }
+            developers {
+                developer {
+                    id.set("ikolomiets")
+                    name.set("Igor Kolomiets")
+                    //email.set("blahblah@email")
+                }
+            }
+            scm {
+                url.set("https://github.com/ikolomiets/protokol")
+            }
+
         }
     }
 }
 
-bintray {
-    user = project.findProperty("bintrayUser").toString()
-    key = project.findProperty("bintrayKey").toString()
-
-    publish = true
-
-    setPublications("kotlinMultiplatform", "jvm", "js")
-
-    pkg.apply {
-        repo = "maven"
-        name = rootProject.name
-        userOrg = "ikolomiets"
-        githubRepo = "ikolomiets/protokol"
-        vcsUrl = "https://github.com/ikolomiets/protokol.git"
-        description = "Kotlin Multiplatform serialization library"
-        setLabels("kotlin", "serialization", "MPP", "Protokol")
-        setLicenses("MIT")
-        websiteUrl = "https://github.com/ikolomiets/protokol"
-        issueTrackerUrl = "https://github.com/ikolomiets/protokol/issues"
-
-        version.apply {
-            name = project.version.toString()
-            desc = "https://github.com/ikolomiets/protokol"
-            released = Date().toString()
-            vcsTag = project.version.toString()
-        }
-    }
+// Signing artifacts. Signing.* extra properties values will be used
+signing {
+    sign(publishing.publications)
 }

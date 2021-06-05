@@ -49,7 +49,7 @@ abstract class ProtokolParser : Protokol {
         val marker = parseBYTE()
         return if (marker != 0.toByte()) {
             val value = po.create()
-            po.use(value, this)
+            po.protokol(this, value)
             value
         } else {
             null
@@ -254,7 +254,7 @@ abstract class ProtokolParser : Protokol {
         val size = parseSize()
         repeat(size) {
             val entry = po.create()
-            po.use(entry, this)
+            po.protokol(this, entry)
             map[entry.key] = entry.value
         }
         prop.set(map)

@@ -103,7 +103,7 @@ abstract class ProtokolComposer : Protokol {
         value?.validator()
         if (value != null) {
             composeBYTE(1)
-            po.use(value, this)
+            po.protokol(this, value)
         } else {
             composeBYTE(0)
         }
@@ -282,6 +282,9 @@ abstract class ProtokolComposer : Protokol {
     override fun <K, V> MAP(prop: KMutableProperty0<Map<K, V>>, po: ProtokolObject<ProtokolMapEntry<K, V>>) {
         val map = prop.get()
         composeSize(map.size)
-        map.forEach { po.use(ProtokolMapEntry(it.key, it.value), this) }
+        map.forEach {
+            val protokol = po.protokol
+            protokol(ProtokolMapEntry(it.key, it.value))
+        }
     }
 }

@@ -63,16 +63,19 @@ object ByteArrayProtokolCodec {
     }
 
     fun <T> encode(value: T, po: ProtokolObject<T>): ByteArray {
+        val protokol = po.protokol
         val sizer = Sizer()
-        po.use(value, sizer)
+        sizer.protokol(value)
         val composer = ByteArrayProtokolComposer(sizer.size)
-        po.use(value, composer)
+        composer.protokol(value)
         return composer.bytes
     }
 
     fun <T> decode(bytes: ByteArray, po: ProtokolObject<T>): T {
         val value = po.create()
-        po.use(value, ByteArrayProtokolParser(bytes))
+        val protokol = po.protokol
+        val parser = ByteArrayProtokolParser(bytes)
+        parser.protokol(value)
         return value
     }
 
