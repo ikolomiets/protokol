@@ -8,8 +8,8 @@ class MapTest {
     data class Model(var map: Map<Int, String>)
 
     object ModelProtokolObject : ProtokolObject<Model> {
-        override fun use(value: Model, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(Model) -> Unit = {
+            with(it) {
                 MAP(::map, SimpleMapEntryProtokolObject)
             }
         }
@@ -18,8 +18,8 @@ class MapTest {
     }
 
     object SimpleMapEntryProtokolObject : ProtokolObject<ProtokolMapEntry<Int, String>> {
-        override fun use(value: ProtokolMapEntry<Int, String>, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ProtokolMapEntry<Int, String>) -> Unit = {
+            with(it) {
                 INT(::key)
                 STRING(::value)
             }
@@ -48,8 +48,8 @@ class MapTest {
     data class Data(var id: Int = 0, var name: String = "", var flag: Boolean = false)
 
     object DataProtokolObject : ProtokolObject<Data> {
-        override fun use(value: Data, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(Data) -> Unit = {
+            with(it) {
                 INT(::id)
                 STRING(::name)
                 BOOLEAN(::flag)
@@ -60,8 +60,8 @@ class MapTest {
     }
 
     object DataMapEntryProtokolObject : ProtokolObject<ProtokolMapEntry<String, Data?>> {
-        override fun use(value: ProtokolMapEntry<String, Data?>, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ProtokolMapEntry<String, Data?>) -> Unit = {
+            with(it) {
                 STRING(::key)
                 OBJECT(::value, DataProtokolObject)
             }

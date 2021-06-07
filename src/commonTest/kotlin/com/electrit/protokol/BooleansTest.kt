@@ -10,8 +10,8 @@ class BooleansTest {
     class BooleansData(var list: List<Boolean> = emptyList())
 
     object BooleansDataProtokolObject : ProtokolObject<BooleansData> {
-        override fun use(value: BooleansData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(BooleansData) -> Unit = {
+            with(it) {
                 BOOLEANS(::list)
             }
         }
@@ -20,10 +20,10 @@ class BooleansTest {
     }
 
     object StrictBooleansDataProtokolObject : ProtokolObject<BooleansData> {
-        override fun use(value: BooleansData, p: Protokol) = with(p) {
-            with(value) {
-                BOOLEANS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) {
-                    if (!it) throw IllegalArgumentException("value can't be false")
+        override val protokol: Protokol.(BooleansData) -> Unit = {
+            with(it) {
+                BOOLEANS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) { value ->
+                    if (!value) throw IllegalArgumentException("value can't be false")
                 }
             }
         }

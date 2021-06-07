@@ -9,8 +9,8 @@ class LongTest {
     class LongData(var l: Long = 0)
 
     object LongDataProtokolObject : ProtokolObject<LongData> {
-        override fun use(value: LongData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(LongData) -> Unit = {
+            with(it) {
                 LONG(::l)
             }
         }
@@ -19,9 +19,9 @@ class LongTest {
     }
 
     object StrictLongDataProtokolObject : ProtokolObject<LongData> {
-        override fun use(value: LongData, p: Protokol) = with(p) {
-            with(value) {
-                LONG(::l) { if (it == 0L) throw IllegalArgumentException("value can't be 0") }
+        override val protokol: Protokol.(LongData) -> Unit = {
+            with(it) {
+                LONG(::l) { value -> if (value == 0L) throw IllegalArgumentException("value can't be 0") }
             }
         }
 

@@ -9,8 +9,8 @@ object ByteArrayProtokolCodec {
         val sizeChecker: (Int) -> Unit,
         val validator: T.() -> Unit
     ) : ProtokolObject<ListWrapper<T>> {
-        override fun use(value: ListWrapper<T>, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ListWrapper<T>) -> Unit = {
+            with(it) {
                 OBJECTS(::value, po, sizeChecker, validator)
             }
         }
@@ -43,8 +43,8 @@ object ByteArrayProtokolCodec {
     private class MapWrapperProtokolObject<K, V>(
         val po: ProtokolObject<ProtokolMapEntry<K, V>>
     ) : ProtokolObject<MapWrapper<K, V>> {
-        override fun use(value: MapWrapper<K, V>, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(MapWrapper<K, V>) -> Unit = {
+            with(it) {
                 MAP(::value, po)
             }
         }

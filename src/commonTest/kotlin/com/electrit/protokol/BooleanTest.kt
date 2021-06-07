@@ -9,8 +9,8 @@ class BooleanTest {
     class BooleanData(var bool: Boolean = false)
 
     object BooleanDataProtokolObject : ProtokolObject<BooleanData> {
-        override fun use(value: BooleanData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(BooleanData) -> Unit = {
+            with(it) {
                 BOOLEAN(::bool)
             }
         }
@@ -19,9 +19,9 @@ class BooleanTest {
     }
 
     object StrictBooleanDataProtokolObject : ProtokolObject<BooleanData> {
-        override fun use(value: BooleanData, p: Protokol) = with(p) {
-            with(value) {
-                BOOLEAN(::bool) { if (it) throw IllegalArgumentException("Only 'false' value is allowed") }
+        override val protokol: Protokol.(BooleanData) -> Unit = {
+            with(it) {
+                BOOLEAN(::bool) { value -> if (value) throw IllegalArgumentException("Only 'false' value is allowed") }
             }
         }
 

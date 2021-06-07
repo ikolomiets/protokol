@@ -26,8 +26,8 @@ class ObjectsTest {
     }
 
     object DataProtokolObject : ProtokolObject<Data> {
-        override fun use(value: Data, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(Data) -> Unit = {
+            with(it) {
                 BYTEARRAY(::bytes)
                 STRING(::string)
             }
@@ -57,8 +57,8 @@ class ObjectsTest {
     }
 
     object ComplexDataProtokolObject : ProtokolObject<ComplexData> {
-        override fun use(value: ComplexData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ComplexData) -> Unit = {
+            with(it) {
                 STRING(::name)
                 OBJECT(::data, DataProtokolObject) {
                     if (this == null || string == "covid-19")
@@ -74,8 +74,8 @@ class ObjectsTest {
     data class ObjectsData(var list: List<ComplexData> = emptyList())
 
     object ObjectsDataProtokolObject : ProtokolObject<ObjectsData> {
-        override fun use(value: ObjectsData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ObjectsData) -> Unit = {
+            with(it) {
                 OBJECTS(::list, ComplexDataProtokolObject)
             }
         }

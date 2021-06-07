@@ -5,14 +5,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-@IgnoreJs
 class FloatTest {
 
     class FloatData(var f: Float = 0f)
 
     object FloatDataProtokolObject : ProtokolObject<FloatData> {
-        override fun use(value: FloatData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(FloatData) -> Unit = {
+            with(it) {
                 FLOAT(::f)
             }
         }
@@ -21,9 +20,9 @@ class FloatTest {
     }
 
     object StrictFloatDataProtokolObject : ProtokolObject<FloatData> {
-        override fun use(value: FloatData, p: Protokol) = with(p) {
-            with(value) {
-                FLOAT(::f) { if (it < 0) throw IllegalArgumentException("value can't be negative") }
+        override val protokol: Protokol.(FloatData) -> Unit = {
+            with(it) {
+                FLOAT(::f) { value -> if (value < 0) throw IllegalArgumentException("value can't be negative") }
             }
         }
 
@@ -35,7 +34,7 @@ class FloatTest {
         fun assert(f: Float, po: ProtokolObject<FloatData>) {
             val bytes = ByteArrayProtokolCodec.encode(FloatData(f), po)
             val data = ByteArrayProtokolCodec.decode(bytes, po)
-            assertEquals(f, data.f)
+            assertEquals(f, data.f, 0f)
         }
 
         assert(Float.MIN_VALUE, FloatDataProtokolObject)

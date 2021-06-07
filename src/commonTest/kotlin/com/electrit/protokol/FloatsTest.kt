@@ -2,18 +2,15 @@ package com.electrit.protokol
 
 import kotlin.math.PI
 import kotlin.random.Random
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.*
 
-@IgnoreJs
 class FloatsTest {
 
     class FloatsData(var list: List<Float> = emptyList())
 
     object FloatsDataProtokolObject : ProtokolObject<FloatsData> {
-        override fun use(value: FloatsData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(FloatsData) -> Unit = {
+            with(it) {
                 FLOATS(::list)
             }
         }
@@ -22,10 +19,10 @@ class FloatsTest {
     }
 
     object StrictFloatsDataProtokolObject : ProtokolObject<FloatsData> {
-        override fun use(value: FloatsData, p: Protokol) = with(p) {
-            with(value) {
-                FLOATS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) {
-                    if (it < 0f) throw IllegalArgumentException("value can't be negative")
+        override val protokol: Protokol.(FloatsData) -> Unit = {
+            with(it) {
+                FLOATS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) { value ->
+                    if (value < 0f) throw IllegalArgumentException("value can't be negative")
                 }
             }
         }
@@ -38,7 +35,13 @@ class FloatsTest {
         fun assert(list: List<Float>, po: ProtokolObject<FloatsData>) {
             val bytes = ByteArrayProtokolCodec.encode(FloatsData(list), po)
             val data = ByteArrayProtokolCodec.decode(bytes, po)
-            assertEquals(list, data.list)
+
+            assertEquals(list.size, data.list.size)
+            if (list.isNotEmpty()) {
+                for (i in list.indices) {
+                    assertEquals(list[i], data.list[i], 0f)
+                }
+            }
         }
 
         assert(emptyList(), FloatsDataProtokolObject)

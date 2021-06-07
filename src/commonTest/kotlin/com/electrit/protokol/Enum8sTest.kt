@@ -10,8 +10,8 @@ class Enum8sTest {
     class Enum8sData(var list: List<TestEnum8> = emptyList())
 
     object Enum8sDataProtokolObject : ProtokolObject<Enum8sData> {
-        override fun use(value: Enum8sData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(Enum8sData) -> Unit = {
+            with(it) {
                 ENUM8S(::list, TestEnum8.values())
             }
         }
@@ -20,10 +20,10 @@ class Enum8sTest {
     }
 
     object StrictEnum8sDataProtokolObject : ProtokolObject<Enum8sData> {
-        override fun use(value: Enum8sData, p: Protokol) = with(p) {
-            with(value) {
-                ENUM8S(::list, TestEnum8.values(), { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) {
-                    if (it == TestEnum8.INST_0) throw IllegalArgumentException("value can't be INST_0")
+        override val protokol: Protokol.(Enum8sData) -> Unit = {
+            with(it) {
+                ENUM8S(::list, TestEnum8.values(), { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) { value ->
+                    if (value == TestEnum8.INST_0) throw IllegalArgumentException("value can't be INST_0")
                 }
             }
         }

@@ -11,8 +11,8 @@ class DoublesTest {
     class DoublesData(var list: List<Double> = emptyList())
 
     object DoublesDataProtokolObject : ProtokolObject<DoublesData> {
-        override fun use(value: DoublesData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(DoublesData) -> Unit = {
+            with(it) {
                 DOUBLES(::list)
             }
         }
@@ -21,10 +21,10 @@ class DoublesTest {
     }
 
     object StrictDoublesDataProtokolObject : ProtokolObject<DoublesData> {
-        override fun use(value: DoublesData, p: Protokol) = with(p) {
-            with(value) {
-                DOUBLES(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) {
-                    if (it < 0) throw IllegalArgumentException("value can't be negative")
+        override val protokol: Protokol.(DoublesData) -> Unit = {
+            with(it) {
+                DOUBLES(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) { value ->
+                    if (value < 0) throw IllegalArgumentException("value can't be negative")
                 }
             }
         }

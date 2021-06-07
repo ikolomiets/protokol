@@ -9,8 +9,8 @@ class ShortTest {
     class ShortData(var s: Short = 0)
 
     object ShortDataProtokolObject : ProtokolObject<ShortData> {
-        override fun use(value: ShortData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ShortData) -> Unit = {
+            with(it) {
                 SHORT(::s)
             }
         }
@@ -19,9 +19,9 @@ class ShortTest {
     }
 
     object StrictShortDataProtokolObject : ProtokolObject<ShortData> {
-        override fun use(value: ShortData, p: Protokol) = with(p) {
-            with(value) {
-                SHORT(::s) { if (it.toInt() == 0) throw IllegalArgumentException("value can't be 0") }
+        override val protokol: Protokol.(ShortData) -> Unit = {
+            with(it) {
+                SHORT(::s) { value -> if (value.toInt() == 0) throw IllegalArgumentException("value can't be 0") }
             }
         }
 

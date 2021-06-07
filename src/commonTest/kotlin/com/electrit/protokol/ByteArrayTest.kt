@@ -10,8 +10,8 @@ class ByteArrayTest {
     class ByteArrayData(var bytes: ByteArray = ByteArray(0))
 
     object ByteArrayDataProtokolObject : ProtokolObject<ByteArrayData> {
-        override fun use(value: ByteArrayData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ByteArrayData) -> Unit = {
+            with(it) {
                 BYTEARRAY(::bytes)
             }
         }
@@ -20,10 +20,10 @@ class ByteArrayTest {
     }
 
     object StrictByteArrayDataProtokolObject : ProtokolObject<ByteArrayData> {
-        override fun use(value: ByteArrayData, p: Protokol) = with(p) {
-            with(value) {
-                BYTEARRAY(::bytes) {
-                    if (it.size > 1024) throw IllegalArgumentException("bytes size can't be more than 1024")
+        override val protokol: Protokol.(ByteArrayData) -> Unit = {
+            with(it) {
+                BYTEARRAY(::bytes) { array ->
+                    if (array.size > 1024) throw IllegalArgumentException("bytes size can't be more than 1024")
                 }
             }
         }
