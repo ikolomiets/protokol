@@ -107,6 +107,15 @@ abstract class ProtokolParser : Protokol {
         validator: (Byte) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseBYTE() }
 
+    override fun UBYTE(prop: KMutableProperty0<UByte>, validator: (UByte) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseBYTE().toUByte() }
+
+    override fun UBYTES(
+        prop: KMutableProperty0<List<UByte>>,
+        sizeChecker: (Int) -> Unit,
+        validator: (UByte) -> Unit
+    ): Unit = parseList(prop, sizeChecker, validator) { parseBYTE().toUByte() }
+
     override fun BYTEARRAY(prop: KMutableProperty0<ByteArray>, validator: (ByteArray) -> Unit) =
         validateAndSet(prop, validator) { parseBYTEARRAY() }
 
@@ -143,6 +152,15 @@ abstract class ProtokolParser : Protokol {
         validator: (Short) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseSHORT() }
 
+    override fun USHORT(prop: KMutableProperty0<UShort>, validator: (UShort) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseSHORT().toUShort() }
+
+    override fun USHORTS(
+        prop: KMutableProperty0<List<UShort>>,
+        sizeChecker: (Int) -> Unit,
+        validator: (UShort) -> Unit
+    ): Unit = parseList(prop, sizeChecker, validator) { parseSHORT().toUShort() }
+
     override fun INT(prop: KMutableProperty0<Int>, validator: (Int) -> Unit) =
         validateAndSet(prop, validator) { parseINT() }
 
@@ -152,6 +170,15 @@ abstract class ProtokolParser : Protokol {
         validator: (Int) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseINT() }
 
+    override fun UINT(prop: KMutableProperty0<UInt>, validator: (UInt) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseINT().toUInt() }
+
+    override fun UINTS(
+        prop: KMutableProperty0<List<UInt>>,
+        sizeChecker: (Int) -> Unit,
+        validator: (UInt) -> Unit
+    ): Unit = parseList(prop, sizeChecker, validator) { parseINT().toUInt() }
+
     override fun LONG(prop: KMutableProperty0<Long>, validator: (Long) -> Unit) =
         validateAndSet(prop, validator) { parseLONG() }
 
@@ -160,6 +187,15 @@ abstract class ProtokolParser : Protokol {
         sizeChecker: (Int) -> Unit,
         validator: (Long) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseLONG() }
+
+    override fun ULONG(prop: KMutableProperty0<ULong>, validator: (ULong) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseLONG().toULong() }
+
+    override fun ULONGS(
+        prop: KMutableProperty0<List<ULong>>,
+        sizeChecker: (Int) -> Unit,
+        validator: (ULong) -> Unit
+    ): Unit = parseList(prop, sizeChecker, validator) { parseLONG().toULong() }
 
     override fun FLOAT(prop: KMutableProperty0<Float>, validator: (Float) -> Unit) =
         validateAndSet(prop, validator) { parseFLOAT() }

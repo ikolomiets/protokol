@@ -59,7 +59,7 @@ class BytesTest {
 
         assertFailsWith<IllegalArgumentException> {
             ByteArrayProtokolCodec.decode(
-                ByteArrayProtokolCodec.encode(BytesData(listOf(1,2, 0, 4)), BytesDataProtokolObject),
+                ByteArrayProtokolCodec.encode(BytesData(listOf(1, 2, 0, 4)), BytesDataProtokolObject),
                 StrictBytesDataProtokolObject
             )
         }

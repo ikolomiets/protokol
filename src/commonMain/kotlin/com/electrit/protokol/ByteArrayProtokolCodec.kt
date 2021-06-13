@@ -82,11 +82,11 @@ object ByteArrayProtokolCodec {
     private class Sizer : ProtokolComposer() {
         var size: Int = 0
 
-        override fun composeBYTE(value: Byte, validator: (Byte) -> Unit) {
+        override fun composeBYTE(value: Byte) {
             size++
         }
 
-        override fun composeBYTEARRAY(value: ByteArray, validator: (ByteArray) -> Unit) {
+        override fun composeBYTEARRAY(value: ByteArray) {
             composeSize(value.size)
             size += value.size
         }

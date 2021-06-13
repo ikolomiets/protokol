@@ -9,6 +9,10 @@ interface Protokol {
 
     fun BYTES(prop: KMutableProperty0<List<Byte>>, sizeChecker: (Int) -> Unit = {}, validator: (Byte) -> Unit = {})
 
+    fun UBYTE(prop: KMutableProperty0<UByte>, validator: (UByte) -> Unit = {})
+
+    fun UBYTES(prop: KMutableProperty0<List<UByte>>, sizeChecker: (Int) -> Unit = {}, validator: (UByte) -> Unit = {})
+
     fun BYTEARRAY(prop: KMutableProperty0<ByteArray>, validator: (ByteArray) -> Unit = {})
 
     fun BYTEARRAYS(
@@ -41,13 +45,29 @@ interface Protokol {
         validator: (Short) -> Unit = {}
     )
 
+    fun USHORT(prop: KMutableProperty0<UShort>, validator: (UShort) -> Unit = {})
+
+    fun USHORTS(
+        prop: KMutableProperty0<List<UShort>>,
+        sizeChecker: (Int) -> Unit = {},
+        validator: (UShort) -> Unit = {}
+    )
+
     fun INT(prop: KMutableProperty0<Int>, validator: (Int) -> Unit = {})
 
     fun INTS(prop: KMutableProperty0<List<Int>>, sizeChecker: (Int) -> Unit = {}, validator: (Int) -> Unit = {})
 
+    fun UINT(prop: KMutableProperty0<UInt>, validator: (UInt) -> Unit = {})
+
+    fun UINTS(prop: KMutableProperty0<List<UInt>>, sizeChecker: (Int) -> Unit = {}, validator: (UInt) -> Unit = {})
+
     fun LONG(prop: KMutableProperty0<Long>, validator: (Long) -> Unit = {})
 
     fun LONGS(prop: KMutableProperty0<List<Long>>, sizeChecker: (Int) -> Unit = {}, validator: (Long) -> Unit = {})
+
+    fun ULONG(prop: KMutableProperty0<ULong>, validator: (ULong) -> Unit = {})
+
+    fun ULONGS(prop: KMutableProperty0<List<ULong>>, sizeChecker: (Int) -> Unit = {}, validator: (ULong) -> Unit = {})
 
     fun FLOAT(prop: KMutableProperty0<Float>, validator: (Float) -> Unit = {})
 
