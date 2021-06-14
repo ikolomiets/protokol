@@ -102,22 +102,8 @@ abstract class ProtokolComposer : Protokol {
 
     fun composeSize(size: Int) = when {
         size < 0 -> throw IllegalArgumentException("size can't be negative: $size")
-        size < 128 -> { // 2^(8-1)
-            composeBYTE(size.toByte())
-        }
-        size < 16384 -> { // 2^(16-2)
-            val i = 0b1000000000000000 or size
-            composeBYTE((i shr 8).toByte())
-            composeBYTE(i.toByte())
-        }
-        size < 1073741824 -> { // 2^(32-2)
-            val i = 0b11000000000000000000000000000000.toInt() or size
-            composeBYTE((i shr 24).toByte())
-            composeBYTE((i shr 16).toByte())
-            composeBYTE((i shr 8).toByte())
-            composeBYTE(i.toByte())
-        }
-        else -> throw IllegalArgumentException("size is too big: $size")
+        size < 128 -> composeBYTE(size.toByte())
+        else -> composeINT(size - 1 - Int.MAX_VALUE) // this sets sign bit while preserving the rest
     }
 
     private fun <T> composeList(

@@ -32,6 +32,7 @@ class UBytesTest {
         override fun create() = UBytesData()
     }
 
+    @ExperimentalUnsignedTypes
     @Test
     fun test() {
         fun assert(list: List<UByte>, po: ProtokolObject<UBytesData>) {

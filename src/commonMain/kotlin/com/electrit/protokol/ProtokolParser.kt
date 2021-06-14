@@ -58,16 +58,12 @@ abstract class ProtokolParser : Protokol {
 
     fun parseSize(): Int {
         val b0 = parseBYTE()
-        return when ((b0.toInt() and 0xff) shr 6) {
-            0b10 -> {
-                val b1 = parseBYTE()
-                ((b0.toInt() and 0b00111111) shl 8) or (b1.toInt() and 0xff)
-            }
-            0b11 -> {
+        return when {
+            b0 < 0 -> {
                 val b1 = parseBYTE()
                 val b2 = parseBYTE()
                 val b3 = parseBYTE()
-                return ((b0.toInt() and 0b00111111) shl 24) or
+                return ((b0.toInt() and 0b01111111) shl 24) or
                         ((b1.toInt() and 0xff) shl 16) or
                         ((b2.toInt() and 0xff) shl 8) or
                         (b3.toInt() and 0xff)
