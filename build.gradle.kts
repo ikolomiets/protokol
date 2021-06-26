@@ -1,8 +1,7 @@
 import java.util.*
-import org.gradle.api.publish.maven.internal.artifact.*
 
 plugins {
-    kotlin("multiplatform") version "1.5.0"
+    kotlin("multiplatform") version "1.5.20"
     `maven-publish`
     signing
 }
@@ -52,11 +51,9 @@ kotlin {
             }
         }
         val jvmMain by getting
-        val jvmTest by getting {
-        }
+        val jvmTest by getting
         val jsMain by getting
-        val jsTest by getting {
-        }
+        val jsTest by getting
         val nativeMain by getting
         val nativeTest by getting
     }

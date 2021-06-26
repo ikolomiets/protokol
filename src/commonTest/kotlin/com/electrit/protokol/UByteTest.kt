@@ -21,7 +21,7 @@ class UByteTest {
     object StrictUByteDataProtokolObject : ProtokolObject<UByteData> {
         override val protokol: Protokol.(UByteData) -> Unit = {
             with(it) {
-                UBYTE(::ubyte) { value -> if (value.toInt() == 0) throw IllegalArgumentException("zero is not allowed") }
+                UBYTE(::ubyte) { value -> if (value == UByte.MAX_VALUE) throw IllegalArgumentException("255 is not allowed") }
             }
         }
 
@@ -41,16 +41,15 @@ class UByteTest {
         assert(UByte.MAX_VALUE, UByteDataProtokolObject)
         assert(200u, UByteDataProtokolObject)
 
-        assertFailsWith<IllegalArgumentException> { assert(UByte.MIN_VALUE, StrictUByteDataProtokolObject) }
-        assertFailsWith<IllegalArgumentException> { assert(0u, StrictUByteDataProtokolObject) }
-        assert(UByte.MAX_VALUE, StrictUByteDataProtokolObject)
+        assertFailsWith<IllegalArgumentException> { assert(UByte.MAX_VALUE, StrictUByteDataProtokolObject) }
+        assert(UByte.MIN_VALUE, StrictUByteDataProtokolObject)
         assert(1u, StrictUByteDataProtokolObject)
         assert(200u, StrictUByteDataProtokolObject)
     }
 
     @Test
     fun testParseError() {
-        val bytes = ByteArrayProtokolCodec.encode(UByteData(0u), UByteDataProtokolObject)
+        val bytes = ByteArrayProtokolCodec.encode(UByteData(UByte.MAX_VALUE), UByteDataProtokolObject)
         assertFailsWith<IllegalArgumentException> { ByteArrayProtokolCodec.decode(bytes, StrictUByteDataProtokolObject) }
     }
 
