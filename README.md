@@ -595,7 +595,7 @@ To parse field of `ByteArray`, `String`, `List<T>` or `Map<K, V>` type the parse
 bytes or collection's elements will follow. For this, **Protokol** encodes `Int` number representing size as prefix
 byte(s) to `ByteArray` or `List` data using _Variable Length Encoding_. VLE uses either a single byte to encode sizes
 up to 127, or four bytes for sizes up to 2147483648 (2^31).
-``
+
 ![Encoding of ByteArrays And Lists](doc/EncodingOfByteArraysAndLists.svg)
 
 To know how many bytes encode size, parser parses first byte and checks its highest bit (#7). If that bit is zero,
