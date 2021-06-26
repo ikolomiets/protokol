@@ -599,7 +599,7 @@ up to 127, or four bytes for sizes up to 2147483648 (2^31).
 ![Encoding of ByteArrays And Lists](doc/EncodingOfByteArraysAndLists.svg)
 
 To know how many bytes encode size, parser parses first byte and checks its highest bit (#7). If that bit is zero,
-then size is encoded with single (same) byte using remaining 7 bits. Otherwise, there more bytes are parsed, so the
+then size is encoded with single (same) byte using remaining 7 bits. Otherwise, three more bytes are parsed, so the
 size is encoded with 4 bytes using remaining 31 bits.
 
 ![Variable Length Encoding](doc/VLE.svg)
