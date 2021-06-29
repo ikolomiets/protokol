@@ -2,7 +2,7 @@ package com.electrit.protokol
 
 interface ProtokolObject<T> {
 
-    fun use(value: T, p: Protokol)
+    val protokol: Protokol.(T) -> Unit
 
     fun create(): T
 

@@ -10,8 +10,8 @@ class ByteArraysTest {
     class ByteArraysData(var list: List<ByteArray> = emptyList())
 
     object ByteArraysDataProtokolObject : ProtokolObject<ByteArraysData> {
-        override fun use(value: ByteArraysData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ByteArraysData) -> Unit = {
+            with(it) {
                 BYTEARRAYS(::list)
             }
         }
@@ -20,10 +20,10 @@ class ByteArraysTest {
     }
 
     object StrictByteArraysDataProtokolObject : ProtokolObject<ByteArraysData> {
-        override fun use(value: ByteArraysData, p: Protokol) = with(p) {
-            with(value) {
-                BYTEARRAYS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) {
-                    if (it.isEmpty()) throw IllegalArgumentException("value can't be empty")
+        override val protokol: Protokol.(ByteArraysData) -> Unit = {
+            with(it) {
+                BYTEARRAYS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) { list ->
+                    if (list.isEmpty()) throw IllegalArgumentException("value can't be empty")
                 }
             }
         }

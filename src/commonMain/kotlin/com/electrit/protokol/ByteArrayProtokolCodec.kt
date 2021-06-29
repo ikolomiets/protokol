@@ -9,8 +9,8 @@ object ByteArrayProtokolCodec {
         val sizeChecker: (Int) -> Unit,
         val validator: T.() -> Unit
     ) : ProtokolObject<ListWrapper<T>> {
-        override fun use(value: ListWrapper<T>, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ListWrapper<T>) -> Unit = {
+            with(it) {
                 OBJECTS(::value, po, sizeChecker, validator)
             }
         }
@@ -43,8 +43,8 @@ object ByteArrayProtokolCodec {
     private class MapWrapperProtokolObject<K, V>(
         val po: ProtokolObject<ProtokolMapEntry<K, V>>
     ) : ProtokolObject<MapWrapper<K, V>> {
-        override fun use(value: MapWrapper<K, V>, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(MapWrapper<K, V>) -> Unit = {
+            with(it) {
                 MAP(::value, po)
             }
         }
@@ -63,27 +63,30 @@ object ByteArrayProtokolCodec {
     }
 
     fun <T> encode(value: T, po: ProtokolObject<T>): ByteArray {
+        val protokol = po.protokol
         val sizer = Sizer()
-        po.use(value, sizer)
+        sizer.protokol(value)
         val composer = ByteArrayProtokolComposer(sizer.size)
-        po.use(value, composer)
+        composer.protokol(value)
         return composer.bytes
     }
 
     fun <T> decode(bytes: ByteArray, po: ProtokolObject<T>): T {
         val value = po.create()
-        po.use(value, ByteArrayProtokolParser(bytes))
+        val protokol = po.protokol
+        val parser = ByteArrayProtokolParser(bytes)
+        parser.protokol(value)
         return value
     }
 
     private class Sizer : ProtokolComposer() {
         var size: Int = 0
 
-        override fun composeBYTE(value: Byte, validator: (Byte) -> Unit) {
+        override fun composeBYTE(value: Byte) {
             size++
         }
 
-        override fun composeBYTEARRAY(value: ByteArray, validator: (ByteArray) -> Unit) {
+        override fun composeBYTEARRAY(value: ByteArray) {
             composeSize(value.size)
             size += value.size
         }

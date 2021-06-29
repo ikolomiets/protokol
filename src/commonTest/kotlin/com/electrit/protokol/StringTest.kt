@@ -10,8 +10,8 @@ class StringTest {
     class StringData(var str: String = "")
 
     object StringDataProtokolObject : ProtokolObject<StringData> {
-        override fun use(value: StringData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(StringData) -> Unit = {
+            with(it) {
                 STRING(::str)
             }
         }
@@ -22,9 +22,9 @@ class StringTest {
     object StrictStringDataProtokolObject : ProtokolObject<StringData> {
         private val regex = Regex("\\d+")
 
-        override fun use(value: StringData, p: Protokol) = with(p) {
-            with(value) {
-                STRING(::str) { if (!regex.matches(it)) throw IllegalArgumentException("Only numbers allowed") }
+        override val protokol: Protokol.(StringData) -> Unit = {
+            with(it) {
+                STRING(::str) { value -> if (!regex.matches(value)) throw IllegalArgumentException("Only numbers allowed") }
             }
         }
 

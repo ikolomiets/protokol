@@ -10,8 +10,8 @@ class IntsTest {
     class IntsData(var list: List<Int> = emptyList())
 
     object IntsDataProtokolObject : ProtokolObject<IntsData> {
-        override fun use(value: IntsData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(IntsData) -> Unit = {
+            with(it) {
                 INTS(::list)
             }
         }
@@ -20,10 +20,10 @@ class IntsTest {
     }
 
     object StrictIntsDataProtokolObject : ProtokolObject<IntsData> {
-        override fun use(value: IntsData, p: Protokol) = with(p) {
-            with(value) {
-                INTS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) {
-                    if (it == 0) throw IllegalArgumentException("value can't be 0")
+        override val protokol: Protokol.(IntsData) -> Unit = {
+            with(it) {
+                INTS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) { value ->
+                    if (value == 0) throw IllegalArgumentException("value can't be 0")
                 }
             }
         }

@@ -49,7 +49,7 @@ abstract class ProtokolParser : Protokol {
         val marker = parseBYTE()
         return if (marker != 0.toByte()) {
             val value = po.create()
-            po.use(value, this)
+            po.protokol(this, value)
             value
         } else {
             null
@@ -58,16 +58,12 @@ abstract class ProtokolParser : Protokol {
 
     fun parseSize(): Int {
         val b0 = parseBYTE()
-        return when ((b0.toInt() and 0xff) shr 6) {
-            0b10 -> {
-                val b1 = parseBYTE()
-                ((b0.toInt() and 0b00111111) shl 8) or (b1.toInt() and 0xff)
-            }
-            0b11 -> {
+        return when {
+            b0 < 0 -> {
                 val b1 = parseBYTE()
                 val b2 = parseBYTE()
                 val b3 = parseBYTE()
-                return ((b0.toInt() and 0b00111111) shl 24) or
+                return ((b0.toInt() and 0b01111111) shl 24) or
                         ((b1.toInt() and 0xff) shl 16) or
                         ((b2.toInt() and 0xff) shl 8) or
                         (b3.toInt() and 0xff)
@@ -107,6 +103,15 @@ abstract class ProtokolParser : Protokol {
         validator: (Byte) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseBYTE() }
 
+    override fun UBYTE(prop: KMutableProperty0<UByte>, validator: (UByte) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseBYTE().toUByte() }
+
+    override fun UBYTES(
+        prop: KMutableProperty0<List<UByte>>,
+        sizeChecker: (Int) -> Unit,
+        validator: (UByte) -> Unit
+    ): Unit = parseList(prop, sizeChecker, validator) { parseBYTE().toUByte() }
+
     override fun BYTEARRAY(prop: KMutableProperty0<ByteArray>, validator: (ByteArray) -> Unit) =
         validateAndSet(prop, validator) { parseBYTEARRAY() }
 
@@ -143,6 +148,15 @@ abstract class ProtokolParser : Protokol {
         validator: (Short) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseSHORT() }
 
+    override fun USHORT(prop: KMutableProperty0<UShort>, validator: (UShort) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseSHORT().toUShort() }
+
+    override fun USHORTS(
+        prop: KMutableProperty0<List<UShort>>,
+        sizeChecker: (Int) -> Unit,
+        validator: (UShort) -> Unit
+    ): Unit = parseList(prop, sizeChecker, validator) { parseSHORT().toUShort() }
+
     override fun INT(prop: KMutableProperty0<Int>, validator: (Int) -> Unit) =
         validateAndSet(prop, validator) { parseINT() }
 
@@ -152,6 +166,15 @@ abstract class ProtokolParser : Protokol {
         validator: (Int) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseINT() }
 
+    override fun UINT(prop: KMutableProperty0<UInt>, validator: (UInt) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseINT().toUInt() }
+
+    override fun UINTS(
+        prop: KMutableProperty0<List<UInt>>,
+        sizeChecker: (Int) -> Unit,
+        validator: (UInt) -> Unit
+    ): Unit = parseList(prop, sizeChecker, validator) { parseINT().toUInt() }
+
     override fun LONG(prop: KMutableProperty0<Long>, validator: (Long) -> Unit) =
         validateAndSet(prop, validator) { parseLONG() }
 
@@ -160,6 +183,15 @@ abstract class ProtokolParser : Protokol {
         sizeChecker: (Int) -> Unit,
         validator: (Long) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseLONG() }
+
+    override fun ULONG(prop: KMutableProperty0<ULong>, validator: (ULong) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseLONG().toULong() }
+
+    override fun ULONGS(
+        prop: KMutableProperty0<List<ULong>>,
+        sizeChecker: (Int) -> Unit,
+        validator: (ULong) -> Unit
+    ): Unit = parseList(prop, sizeChecker, validator) { parseLONG().toULong() }
 
     override fun FLOAT(prop: KMutableProperty0<Float>, validator: (Float) -> Unit) =
         validateAndSet(prop, validator) { parseFLOAT() }
@@ -254,7 +286,7 @@ abstract class ProtokolParser : Protokol {
         val size = parseSize()
         repeat(size) {
             val entry = po.create()
-            po.use(entry, this)
+            po.protokol(this, entry)
             map[entry.key] = entry.value
         }
         prop.set(map)

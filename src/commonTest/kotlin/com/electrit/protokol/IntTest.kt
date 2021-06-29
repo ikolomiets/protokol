@@ -9,8 +9,8 @@ class IntTest {
     class IntData(var i: Int = 0)
 
     object IntDataProtokolObject : ProtokolObject<IntData> {
-        override fun use(value: IntData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(IntData) -> Unit = {
+            with(it) {
                 INT(::i)
             }
         }
@@ -19,9 +19,9 @@ class IntTest {
     }
 
     object StrictIntDataProtokolObject : ProtokolObject<IntData> {
-        override fun use(value: IntData, p: Protokol) = with(p) {
-            with(value) {
-                INT(::i) { if (it == 0) throw IllegalArgumentException("value can't be 0") }
+        override val protokol: Protokol.(IntData) -> Unit = {
+            with(it) {
+                INT(::i) { value -> if (value == 0) throw IllegalArgumentException("value can't be 0") }
             }
         }
 

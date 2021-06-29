@@ -2,7 +2,7 @@ package com.electrit.protokol
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 
 class SizeTest {
 
@@ -18,11 +18,9 @@ class SizeTest {
 
         assertSize(0, 1)
         assertSize(127, 1)
-        assertSize(128, 2)
-        assertSize(16383, 2)
-        assertSize(16384, 4)
-        assertSize(1073741823, 4)
-        assertFails { ByteArrayProtokolComposer(4).composeSize(1073741824) } is IllegalArgumentException
+        assertSize(128, 4)
+        assertSize(Int.MAX_VALUE, 4)
+        assertFailsWith<IllegalArgumentException> { ByteArrayProtokolComposer(1).composeSize(-1) }
     }
 
 }

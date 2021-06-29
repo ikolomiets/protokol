@@ -10,8 +10,8 @@ class LongsTest {
     class LongsData(var list: List<Long> = emptyList())
 
     object LongsDataProtokolObject : ProtokolObject<LongsData> {
-        override fun use(value: LongsData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(LongsData) -> Unit = {
+            with(it) {
                 LONGS(::list)
             }
         }
@@ -20,10 +20,10 @@ class LongsTest {
     }
 
     object StrictLongsDataProtokolObject : ProtokolObject<LongsData> {
-        override fun use(value: LongsData, p: Protokol) = with(p) {
-            with(value) {
-                LONGS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) {
-                    if (it == 0L) throw IllegalArgumentException("value can't be 0")
+        override val protokol: Protokol.(LongsData) -> Unit = {
+            with(it) {
+                LONGS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) { value ->
+                    if (value == 0L) throw IllegalArgumentException("value can't be 0")
                 }
             }
         }

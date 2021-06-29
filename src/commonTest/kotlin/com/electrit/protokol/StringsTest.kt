@@ -10,8 +10,8 @@ class StringsTest {
     class StringsData(var list: List<String> = emptyList())
 
     object StringsDataProtokolObject : ProtokolObject<StringsData> {
-        override fun use(value: StringsData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(StringsData) -> Unit = {
+            with(it) {
                 STRINGS(::list)
             }
         }
@@ -20,10 +20,10 @@ class StringsTest {
     }
 
     object StrictStringsDataProtokolObject : ProtokolObject<StringsData> {
-        override fun use(value: StringsData, p: Protokol) = with(p) {
-            with(value) {
-                STRINGS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) {
-                    if (it.isEmpty()) throw IllegalArgumentException("string can't be empty")
+        override val protokol: Protokol.(StringsData) -> Unit = {
+            with(it) {
+                STRINGS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) { value ->
+                    if (value.isEmpty()) throw IllegalArgumentException("string can't be empty")
                 }
             }
         }

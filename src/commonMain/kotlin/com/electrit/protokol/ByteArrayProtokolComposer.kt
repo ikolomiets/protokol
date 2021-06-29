@@ -5,15 +5,13 @@ class ByteArrayProtokolComposer(private var size: Int) : ProtokolComposer() {
     val bytes = ByteArray(size)
     private var offset = 0
 
-    override fun composeBYTE(value: Byte, validator: (Byte) -> Unit) {
-        validator(value)
+    override fun composeBYTE(value: Byte) {
         ensureEnoughSpace(1)
         bytes[offset++] = value
     }
 
-    override fun composeBYTEARRAY(value: ByteArray, validator: (ByteArray) -> Unit) {
+    override fun composeBYTEARRAY(value: ByteArray) {
         composeSize(value.size)
-        validator(value)
         ensureEnoughSpace(value.size)
         value.copyInto(bytes, offset)
         offset += value.size

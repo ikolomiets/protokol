@@ -11,8 +11,8 @@ class Enum8Test {
     class BadEnum8Data(var e: BadTestEnum8 = BadTestEnum8.INST_0)
 
     object Enum8DataProtokolObject : ProtokolObject<Enum8Data> {
-        override fun use(value: Enum8Data, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(Enum8Data) -> Unit = {
+            with(it) {
                 ENUM8(::e, TestEnum8.values())
             }
         }
@@ -21,8 +21,8 @@ class Enum8Test {
     }
 
     object BadEnum8DataProtokolObject : ProtokolObject<BadEnum8Data> {
-        override fun use(value: BadEnum8Data, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(BadEnum8Data) -> Unit = {
+            with(it) {
                 ENUM8(::e, BadTestEnum8.values())
             }
         }
@@ -31,10 +31,10 @@ class Enum8Test {
     }
 
     object StrictEnum8DataProtokolObject : ProtokolObject<Enum8Data> {
-        override fun use(value: Enum8Data, p: Protokol) = with(p) {
-            with(value) {
-                ENUM8(::e, TestEnum8.values()) {
-                    if (it == TestEnum8.INST_0) throw IllegalArgumentException("value can't be INST_0")
+        override val protokol: Protokol.(Enum8Data) -> Unit = {
+            with(it) {
+                ENUM8(::e, TestEnum8.values()) { value ->
+                    if (value == TestEnum8.INST_0) throw IllegalArgumentException("value can't be INST_0")
                 }
             }
         }

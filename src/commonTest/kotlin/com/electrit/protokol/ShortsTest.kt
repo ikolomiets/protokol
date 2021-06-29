@@ -10,8 +10,8 @@ class ShortsTest {
     class ShortsData(var list: List<Short> = emptyList())
 
     object ShortsDataProtokolObject : ProtokolObject<ShortsData> {
-        override fun use(value: ShortsData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ShortsData) -> Unit = {
+            with(it) {
                 SHORTS(::list)
             }
         }
@@ -20,10 +20,10 @@ class ShortsTest {
     }
 
     object StrictShortsDataProtokolObject : ProtokolObject<ShortsData> {
-        override fun use(value: ShortsData, p: Protokol) = with(p) {
-            with(value) {
-                SHORTS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) {
-                    if (it.toInt() == 0) throw IllegalArgumentException("value can't be 0")
+        override val protokol: Protokol.(ShortsData) -> Unit = {
+            with(it) {
+                SHORTS(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) { value ->
+                    if (value.toInt() == 0) throw IllegalArgumentException("value can't be 0")
                 }
             }
         }

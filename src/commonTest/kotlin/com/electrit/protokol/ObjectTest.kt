@@ -44,8 +44,8 @@ class ObjectTest {
     }
 
     object DataProtokolObject : ProtokolObject<Data> {
-        override fun use(value: Data, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(Data) -> Unit = {
+            with(it) {
                 BYTE(::byte)
                 BYTEARRAY(::bytes)
                 BOOLEAN(::boolean)
@@ -90,8 +90,8 @@ class ObjectTest {
     }
 
     open class AbstractComplexDataProtokolObject(private val validate: Boolean) : ProtokolObject<ComplexData> {
-        override fun use(value: ComplexData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ComplexData) -> Unit = {
+            with(it) {
                 INT(::id)
                 BOOLEAN(::verified)
                 OBJECT(::optData, DataProtokolObject) { if (validate && this != null) throw IllegalArgumentException("data must be null") }

@@ -10,8 +10,8 @@ class DoubleTest {
     class DoubleData(var d: Double = 0.0)
 
     object DoubleDataProtokolObject : ProtokolObject<DoubleData> {
-        override fun use(value: DoubleData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(DoubleData) -> Unit = {
+            with(it) {
                 DOUBLE(::d)
             }
         }
@@ -20,9 +20,9 @@ class DoubleTest {
     }
 
     object StrictDoubleDataProtokolObject : ProtokolObject<DoubleData> {
-        override fun use(value: DoubleData, p: Protokol) = with(p) {
-            with(value) {
-                DOUBLE(::d) { if (it < 0) throw IllegalArgumentException("value can't be negative") }
+        override val protokol: Protokol.(DoubleData) -> Unit = {
+            with(it) {
+                DOUBLE(::d) { value -> if (value < 0) throw IllegalArgumentException("value can't be negative") }
             }
         }
 

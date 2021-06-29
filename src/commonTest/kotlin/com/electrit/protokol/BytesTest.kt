@@ -10,8 +10,8 @@ class BytesTest {
     class BytesData(var list: List<Byte> = emptyList())
 
     object BytesDataProtokolObject : ProtokolObject<BytesData> {
-        override fun use(value: BytesData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(BytesData) -> Unit = {
+            with(it) {
                 BYTES(::list)
             }
         }
@@ -20,10 +20,10 @@ class BytesTest {
     }
 
     object StrictBytesDataProtokolObject : ProtokolObject<BytesData> {
-        override fun use(value: BytesData, p: Protokol) = with(p) {
-            with(value) {
-                BYTES(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) {
-                    if (it.toInt() == 0) throw IllegalArgumentException("value can't be 0")
+        override val protokol: Protokol.(BytesData) -> Unit = {
+            with(it) {
+                BYTES(::list, { size -> if (size == 0) throw IllegalArgumentException("size can't be 0") }) { value ->
+                    if (value.toInt() == 0) throw IllegalArgumentException("value can't be 0")
                 }
             }
         }
@@ -59,7 +59,7 @@ class BytesTest {
 
         assertFailsWith<IllegalArgumentException> {
             ByteArrayProtokolCodec.decode(
-                ByteArrayProtokolCodec.encode(BytesData(listOf(1,2, 0, 4)), BytesDataProtokolObject),
+                ByteArrayProtokolCodec.encode(BytesData(listOf(1, 2, 0, 4)), BytesDataProtokolObject),
                 StrictBytesDataProtokolObject
             )
         }

@@ -9,8 +9,8 @@ class ByteTest {
     class ByteData(var byte: Byte = 0)
 
     object ByteDataProtokolObject : ProtokolObject<ByteData> {
-        override fun use(value: ByteData, p: Protokol) = with(p) {
-            with(value) {
+        override val protokol: Protokol.(ByteData) -> Unit = {
+            with(it) {
                 BYTE(::byte)
             }
         }
@@ -19,9 +19,9 @@ class ByteTest {
     }
 
     object StrictByteDataProtokolObject : ProtokolObject<ByteData> {
-        override fun use(value: ByteData, p: Protokol) = with(p) {
-            with(value) {
-                BYTE(::byte) { if (it.toInt() == 0) throw IllegalArgumentException("zero is not allowed") }
+        override val protokol: Protokol.(ByteData) -> Unit = {
+            with(it) {
+                BYTE(::byte) { value -> if (value.toInt() == 0) throw IllegalArgumentException("zero is not allowed") }
             }
         }
 
