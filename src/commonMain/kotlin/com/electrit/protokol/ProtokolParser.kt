@@ -56,7 +56,7 @@ abstract class ProtokolParser : Protokol {
         }
     }
 
-    fun parseSize(): Int {
+    internal fun parseSize(): Int {
         val b0 = parseBYTE()
         return when {
             b0 < 0 -> {

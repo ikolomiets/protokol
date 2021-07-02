@@ -4,9 +4,9 @@ import kotlin.reflect.KMutableProperty0
 
 abstract class ProtokolComposer : Protokol {
 
-    abstract fun composeBYTE(value: Byte)
+    abstract fun composeByte(value: Byte)
 
-    abstract fun composeBYTEARRAY(value: ByteArray)
+    abstract fun composeByteArray(value: ByteArray)
 
     private fun composeBITSET8(
         b0: Boolean,
@@ -38,34 +38,34 @@ abstract class ProtokolComposer : Protokol {
                 (if (b2) 1 else 0) shl 1) or
                 (if (b1) 1 else 0) shl 1) or
                 (if (b0) 1 else 0)
-        composeBYTE(value.toByte())
+        composeByte(value.toByte())
     }
 
-    private fun composeSTRING(value: String) = composeBYTEARRAY(value.encodeToByteArray())
+    private fun composeSTRING(value: String) = composeByteArray(value.encodeToByteArray())
 
-    private fun composeBOOLEAN(value: Boolean) = composeBYTE(if (value) 1 else 0)
+    private fun composeBOOLEAN(value: Boolean) = composeByte(if (value) 1 else 0)
 
     private fun composeSHORT(value: Short) {
-        composeBYTE((value.toInt() ushr 8).toByte())
-        composeBYTE(value.toByte())
+        composeByte((value.toInt() ushr 8).toByte())
+        composeByte(value.toByte())
     }
 
     private fun composeINT(value: Int) {
-        composeBYTE((value ushr 24).toByte())
-        composeBYTE((value ushr 16).toByte())
-        composeBYTE((value ushr 8).toByte())
-        composeBYTE(value.toByte())
+        composeByte((value ushr 24).toByte())
+        composeByte((value ushr 16).toByte())
+        composeByte((value ushr 8).toByte())
+        composeByte(value.toByte())
     }
 
     private fun composeLONG(value: Long) {
-        composeBYTE((value ushr 56).toByte())
-        composeBYTE((value ushr 48).toByte())
-        composeBYTE((value ushr 40).toByte())
-        composeBYTE((value ushr 32).toByte())
-        composeBYTE((value ushr 24).toByte())
-        composeBYTE((value ushr 16).toByte())
-        composeBYTE((value ushr 8).toByte())
-        composeBYTE(value.toByte())
+        composeByte((value ushr 56).toByte())
+        composeByte((value ushr 48).toByte())
+        composeByte((value ushr 40).toByte())
+        composeByte((value ushr 32).toByte())
+        composeByte((value ushr 24).toByte())
+        composeByte((value ushr 16).toByte())
+        composeByte((value ushr 8).toByte())
+        composeByte(value.toByte())
     }
 
     private fun composeFLOAT(value: Float, validator: (Float) -> Unit) {
@@ -81,7 +81,7 @@ abstract class ProtokolComposer : Protokol {
     private fun <E : Enum<E>> composeENUM8(value: E, values: Array<E>, validator: (E) -> Unit) {
         require(values.size <= 256) { "ENUM8 supports enums with up to 256 instances, actual: ${values.size}" }
         validator(value)
-        composeBYTE(value.ordinal.toByte())
+        composeByte(value.ordinal.toByte())
     }
 
     private fun <E : Enum<E>> composeENUM16(value: E, values: Array<E>, validator: (E) -> Unit) {
@@ -93,16 +93,16 @@ abstract class ProtokolComposer : Protokol {
     private fun <T> composeOBJECT(value: T?, po: ProtokolObject<T>, validator: T.() -> Unit) {
         value?.validator()
         if (value != null) {
-            composeBYTE(1)
+            composeByte(1)
             po.protokol(this, value)
         } else {
-            composeBYTE(0)
+            composeByte(0)
         }
     }
 
-    fun composeSize(size: Int) = when {
+    internal fun composeSize(size: Int) = when {
         size < 0 -> throw IllegalArgumentException("size can't be negative: $size")
-        size < 128 -> composeBYTE(size.toByte())
+        size < 128 -> composeByte(size.toByte())
         else -> composeINT(size - 1 - Int.MAX_VALUE) // this sets sign bit while preserving the rest
     }
 
@@ -119,36 +119,36 @@ abstract class ProtokolComposer : Protokol {
 
     override fun BYTE(prop: KMutableProperty0<Byte>, validator: (Byte) -> Unit) {
         validator(prop.get())
-        composeBYTE(prop.get())
+        composeByte(prop.get())
     }
 
     override fun BYTES(
         prop: KMutableProperty0<List<Byte>>,
         sizeChecker: (Int) -> Unit,
         validator: (Byte) -> Unit
-    ) = composeList(prop, sizeChecker) { validator(it); composeBYTE(it) }
+    ) = composeList(prop, sizeChecker) { validator(it); composeByte(it) }
 
     override fun UBYTE(prop: KMutableProperty0<UByte>, validator: (UByte) -> Unit) {
         validator(prop.get())
-        composeBYTE(prop.get().toByte())
+        composeByte(prop.get().toByte())
     }
 
     override fun UBYTES(
         prop: KMutableProperty0<List<UByte>>,
         sizeChecker: (Int) -> Unit,
         validator: (UByte) -> Unit
-    ): Unit = composeList(prop, sizeChecker) { validator(it); composeBYTE(it.toByte()) }
+    ): Unit = composeList(prop, sizeChecker) { validator(it); composeByte(it.toByte()) }
 
     override fun BYTEARRAY(prop: KMutableProperty0<ByteArray>, validator: (ByteArray) -> Unit) {
         validator(prop.get())
-        composeBYTEARRAY(prop.get())
+        composeByteArray(prop.get())
     }
 
     override fun BYTEARRAYS(
         prop: KMutableProperty0<List<ByteArray>>,
         sizeChecker: (Int) -> Unit,
         validator: (ByteArray) -> Unit
-    ) = composeList(prop, sizeChecker) { validator(it); composeBYTEARRAY(it) }
+    ) = composeList(prop, sizeChecker) { validator(it); composeByteArray(it) }
 
     override fun STRING(prop: KMutableProperty0<String>, validator: (String) -> Unit) {
         validator(prop.get())
