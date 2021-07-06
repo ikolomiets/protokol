@@ -1,6 +1,6 @@
 package com.electrit.protokol
 
-abstract class ProtokolCodec {
+abstract class ProtokolCodec<D> {
 
     private class ListWrapper<T>(var value: List<T> = emptyList())
 
@@ -23,18 +23,18 @@ abstract class ProtokolCodec {
         po: ProtokolObject<T>,
         sizeChecker: (Int) -> Unit = {},
         validator: T.() -> Unit = {}
-    ): ByteArray {
+    ): D {
         val listWrapper = ListWrapper(value)
         return encode(listWrapper, ListWrapperProtokolObject(po, sizeChecker, validator))
     }
 
     fun <T> decodeList(
-        bytes: ByteArray,
+        data: D,
         po: ProtokolObject<T>,
         sizeChecker: (Int) -> Unit = {},
         validator: T.() -> Unit = {}
     ): List<T> {
-        val listWrapper = decode(bytes, ListWrapperProtokolObject(po, sizeChecker, validator))
+        val listWrapper = decode(data, ListWrapperProtokolObject(po, sizeChecker, validator))
         return listWrapper.value
     }
 
@@ -52,28 +52,47 @@ abstract class ProtokolCodec {
         override fun create() = MapWrapper<K, V>()
     }
 
-    fun <K, V> encodeMap(value: Map<K, V>, po: ProtokolObject<ProtokolMapEntry<K, V>>): ByteArray {
+    fun <K, V> encodeMap(value: Map<K, V>, po: ProtokolObject<ProtokolMapEntry<K, V>>): D {
         val mapWrapper = MapWrapper(value)
         return encode(mapWrapper, MapWrapperProtokolObject(po))
     }
 
-    fun <K, V> decodeMap(bytes: ByteArray, po: ProtokolObject<ProtokolMapEntry<K, V>>): Map<K, V> {
-        val mapWrapper = decode(bytes, MapWrapperProtokolObject(po))
+    fun <K, V> decodeMap(data: D, po: ProtokolObject<ProtokolMapEntry<K, V>>): Map<K, V> {
+        val mapWrapper = decode(data, MapWrapperProtokolObject(po))
         return mapWrapper.value
     }
 
-    abstract fun <T> encode(value: T, po: ProtokolObject<T>): ByteArray
+    fun <T> encode(value: T, po: ProtokolObject<T>): D {
+        val protokol = po.protokol
+        val size = Sizer().apply { protokol(value) }.size
+        val data = allocate(size)
+        val composer = createComposer(data)
+        composer.protokol(value)
+        return data
+    }
 
-    abstract fun <T> decode(bytes: ByteArray, po: ProtokolObject<T>): T
+    fun <T> decode(data: D, po: ProtokolObject<T>): T {
+        val value = po.create()
+        val protokol = po.protokol
+        val parser = createParser(data)
+        parser.protokol(value)
+        return value
+    }
 
-    internal class Sizer : ProtokolComposer() {
+    internal abstract fun allocate(size: Int): D
+
+    internal abstract fun createComposer(data: D): StandardProtokolComposer
+
+    internal abstract fun createParser(data: D): StandardProtokolParser
+
+    private class Sizer : StandardProtokolComposer() {
         var size: Int = 0
 
-        override fun composeByte(value: Byte) {
+        override fun composeBYTE(value: Byte) {
             size++
         }
 
-        override fun composeByteArray(value: ByteArray) {
+        override fun composeBYTEARRAY(value: ByteArray) {
             composeSize(value.size)
             size += value.size
         }

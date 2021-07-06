@@ -2,19 +2,19 @@ package com.electrit.protokol
 
 import java.nio.ByteBuffer
 
-object ByteBufferProtokolCodec : ProtokolCodec() {
+abstract class ByteBufferProtokolCodec : ProtokolCodec<ByteBuffer>() {
 
-    private class ByteBufferProtokolComposer(private val buffer: ByteBuffer) : ProtokolComposer() {
-        override fun composeByte(value: Byte) {
+    private class ByteBufferProtokolComposer(private val buffer: ByteBuffer) : StandardProtokolComposer() {
+        override fun composeBYTE(value: Byte) {
             buffer.put(value)
         }
 
-        override fun composeByteArray(value: ByteArray) {
+        override fun composeBYTEARRAY(value: ByteArray) {
             buffer.put(value)
         }
     }
 
-    private class ByteBufferProtokolParser(private val buffer: ByteBuffer) : ProtokolParser() {
+    private class ByteBufferProtokolParser(private val buffer: ByteBuffer) : StandardProtokolParser() {
         override fun parseBYTE(): Byte = buffer.get()
 
         override fun parseBYTEARRAY(): ByteArray {
@@ -25,24 +25,16 @@ object ByteBufferProtokolCodec : ProtokolCodec() {
         }
     }
 
-    override fun <T> encode(value: T, po: ProtokolObject<T>): ByteArray {
-        val protokol = po.protokol
-        val sizer = Sizer()
-        sizer.protokol(value)
-        val buffer = ByteBuffer.allocate(sizer.size)
-        val composer = ByteBufferProtokolComposer(buffer)
-        composer.protokol(value)
-        return buffer.array()
-    }
+    override fun createComposer(data: ByteBuffer): StandardProtokolComposer = ByteBufferProtokolComposer(data)
 
-    override fun <T> decode(bytes: ByteArray, po: ProtokolObject<T>): T {
-        val value = po.create()
-        val protokol = po.protokol
-        val buffer = ByteBuffer.wrap(bytes)
-        val parser = ByteBufferProtokolParser(buffer)
-        parser.protokol(value)
-        return value
-    }
+    override fun createParser(data: ByteBuffer): StandardProtokolParser = ByteBufferProtokolParser(data)
 
 }
 
+object HeapByteBufferProtokolCodec : ByteBufferProtokolCodec() {
+    override fun allocate(size: Int): ByteBuffer = ByteBuffer.allocate(size)
+}
+
+object DirectByteBufferProtokolCodec : ByteBufferProtokolCodec() {
+    override fun allocate(size: Int): ByteBuffer = ByteBuffer.allocateDirect(size)
+}

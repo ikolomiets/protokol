@@ -4,73 +4,41 @@ import kotlin.reflect.KMutableProperty0
 
 abstract class ProtokolParser : Protokol {
 
-    abstract fun parseBYTE(): Byte
+    protected abstract fun parseBYTE(): Byte
 
-    abstract fun parseBYTEARRAY(): ByteArray
+    protected abstract fun parseUBYTE(): UByte
 
-    private fun parseSTRING(): String = parseBYTEARRAY().decodeToString()
+    protected abstract fun parseBYTEARRAY(): ByteArray
 
-    private fun parseBOOLEAN(): Boolean = parseBYTE().toInt() != 0
+    protected abstract fun parseSTRING(): String
 
-    private fun parseSHORT(): Short =
-        (((parseBYTE().toInt() and 0xff) shl 8) or (parseBYTE().toInt() and 0xff)).toShort()
+    protected abstract fun parseBOOLEAN(): Boolean
 
-    private fun parseINT(): Int =
-        ((parseBYTE().toInt() and 0xff) shl 24) or
-                ((parseBYTE().toInt() and 0xff) shl 16) or
-                ((parseBYTE().toInt() and 0xff) shl 8) or
-                (parseBYTE().toInt() and 0xff)
+    protected abstract fun parseSHORT(): Short
 
-    private fun parseLONG(): Long =
-        ((parseBYTE().toLong() and 0xffL) shl 56) or
-                ((parseBYTE().toLong() and 0xffL) shl 48) or
-                ((parseBYTE().toLong() and 0xffL) shl 40) or
-                ((parseBYTE().toLong() and 0xffL) shl 32) or
-                ((parseBYTE().toLong() and 0xffL) shl 24) or
-                ((parseBYTE().toLong() and 0xffL) shl 16) or
-                ((parseBYTE().toLong() and 0xffL) shl 8) or
-                (parseBYTE().toLong() and 0xffL)
+    protected abstract fun parseUSHORT(): UShort
 
-    private fun parseFLOAT(): Float = Float.fromBits(parseINT())
+    protected abstract fun parseINT(): Int
 
-    private fun parseDOUBLE(): Double = Double.fromBits(parseLONG())
+    protected abstract fun parseUINT(): UInt
 
-    private fun <E : Enum<E>> parseENUM8(values: Array<E>): E {
-        require(values.size <= 256) { "ENUM8 allows for up to 256 values, actual: ${values.size}" }
-        return values[parseBYTE().toInt() and 0xff]
-    }
+    protected abstract fun parseLONG(): Long
 
-    private fun <E : Enum<E>> parseENUM16(values: Array<E>): E {
-        require(values.size <= 65536) { "ENUM16 allows for up to 65536 values, actual: ${values.size}" }
-        return values[parseSHORT().toInt() and 0b00000000000000001111111111111111]
-    }
+    protected abstract fun parseULONG(): ULong
 
-    private fun <T> parseOBJECT(po: ProtokolObject<T>): T? {
-        val marker = parseBYTE()
-        return if (marker != 0.toByte()) {
-            val value = po.create()
-            po.protokol(this, value)
-            value
-        } else {
-            null
-        }
-    }
+    protected abstract fun parseFLOAT(): Float
 
-    internal fun parseSize(): Int {
-        val b0 = parseBYTE()
-        return when {
-            b0 < 0 -> {
-                val b1 = parseBYTE()
-                val b2 = parseBYTE()
-                val b3 = parseBYTE()
-                return ((b0.toInt() and 0b01111111) shl 24) or
-                        ((b1.toInt() and 0xff) shl 16) or
-                        ((b2.toInt() and 0xff) shl 8) or
-                        (b3.toInt() and 0xff)
-            }
-            else -> b0.toInt()
-        }
-    }
+    protected abstract fun parseDOUBLE(): Double
+
+    protected abstract fun <E : Enum<E>> parseENUM8(values: Array<E>): E
+
+    protected abstract fun <E : Enum<E>> parseENUM16(values: Array<E>): E
+
+    protected abstract fun <T> parseOBJECT(po: ProtokolObject<T>): T?
+
+    protected abstract fun parseSize(): Int
+
+    protected abstract fun parseBITSET8(): List<Boolean>
 
     private fun <T> validateAndSet(prop: KMutableProperty0<T>, validator: (T) -> Unit, parseValue: () -> T) {
         val value = parseValue()
@@ -94,151 +62,151 @@ abstract class ProtokolParser : Protokol {
         prop.set(list)
     }
 
-    override fun BYTE(prop: KMutableProperty0<Byte>, validator: (Byte) -> Unit) =
+    final override fun BYTE(prop: KMutableProperty0<Byte>, validator: (Byte) -> Unit) =
         validateAndSet(prop, validator) { parseBYTE() }
 
-    override fun BYTES(
+    final override fun BYTES(
         prop: KMutableProperty0<List<Byte>>,
         sizeChecker: (Int) -> Unit,
         validator: (Byte) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseBYTE() }
 
-    override fun UBYTE(prop: KMutableProperty0<UByte>, validator: (UByte) -> Unit): Unit =
-        validateAndSet(prop, validator) { parseBYTE().toUByte() }
+    final override fun UBYTE(prop: KMutableProperty0<UByte>, validator: (UByte) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseUBYTE() }
 
-    override fun UBYTES(
+    final override fun UBYTES(
         prop: KMutableProperty0<List<UByte>>,
         sizeChecker: (Int) -> Unit,
         validator: (UByte) -> Unit
-    ): Unit = parseList(prop, sizeChecker, validator) { parseBYTE().toUByte() }
+    ): Unit = parseList(prop, sizeChecker, validator) { parseUBYTE() }
 
-    override fun BYTEARRAY(prop: KMutableProperty0<ByteArray>, validator: (ByteArray) -> Unit) =
+    final override fun BYTEARRAY(prop: KMutableProperty0<ByteArray>, validator: (ByteArray) -> Unit) =
         validateAndSet(prop, validator) { parseBYTEARRAY() }
 
-    override fun BYTEARRAYS(
+    final override fun BYTEARRAYS(
         prop: KMutableProperty0<List<ByteArray>>,
         sizeChecker: (Int) -> Unit,
         validator: (ByteArray) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseBYTEARRAY() }
 
-    override fun STRING(prop: KMutableProperty0<String>, validator: (String) -> Unit) =
+    final override fun STRING(prop: KMutableProperty0<String>, validator: (String) -> Unit) =
         validateAndSet(prop, validator) { parseSTRING() }
 
-    override fun STRINGS(
+    final override fun STRINGS(
         prop: KMutableProperty0<List<String>>,
         sizeChecker: (Int) -> Unit,
         validator: (String) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseSTRING() }
 
-    override fun BOOLEAN(prop: KMutableProperty0<Boolean>, validator: (Boolean) -> Unit) =
+    final override fun BOOLEAN(prop: KMutableProperty0<Boolean>, validator: (Boolean) -> Unit) =
         validateAndSet(prop, validator) { parseBOOLEAN() }
 
-    override fun BOOLEANS(
+    final override fun BOOLEANS(
         prop: KMutableProperty0<List<Boolean>>,
         sizeChecker: (Int) -> Unit,
         validator: (Boolean) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseBOOLEAN() }
 
-    override fun SHORT(prop: KMutableProperty0<Short>, validator: (Short) -> Unit) =
+    final override fun SHORT(prop: KMutableProperty0<Short>, validator: (Short) -> Unit) =
         validateAndSet(prop, validator) { parseSHORT() }
 
-    override fun SHORTS(
+    final override fun SHORTS(
         prop: KMutableProperty0<List<Short>>,
         sizeChecker: (Int) -> Unit,
         validator: (Short) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseSHORT() }
 
-    override fun USHORT(prop: KMutableProperty0<UShort>, validator: (UShort) -> Unit): Unit =
-        validateAndSet(prop, validator) { parseSHORT().toUShort() }
+    final override fun USHORT(prop: KMutableProperty0<UShort>, validator: (UShort) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseUSHORT() }
 
-    override fun USHORTS(
+    final override fun USHORTS(
         prop: KMutableProperty0<List<UShort>>,
         sizeChecker: (Int) -> Unit,
         validator: (UShort) -> Unit
-    ): Unit = parseList(prop, sizeChecker, validator) { parseSHORT().toUShort() }
+    ): Unit = parseList(prop, sizeChecker, validator) { parseUSHORT() }
 
-    override fun INT(prop: KMutableProperty0<Int>, validator: (Int) -> Unit) =
+    final override fun INT(prop: KMutableProperty0<Int>, validator: (Int) -> Unit) =
         validateAndSet(prop, validator) { parseINT() }
 
-    override fun INTS(
+    final override fun INTS(
         prop: KMutableProperty0<List<Int>>,
         sizeChecker: (Int) -> Unit,
         validator: (Int) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseINT() }
 
-    override fun UINT(prop: KMutableProperty0<UInt>, validator: (UInt) -> Unit): Unit =
-        validateAndSet(prop, validator) { parseINT().toUInt() }
+    final override fun UINT(prop: KMutableProperty0<UInt>, validator: (UInt) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseUINT() }
 
-    override fun UINTS(
+    final override fun UINTS(
         prop: KMutableProperty0<List<UInt>>,
         sizeChecker: (Int) -> Unit,
         validator: (UInt) -> Unit
-    ): Unit = parseList(prop, sizeChecker, validator) { parseINT().toUInt() }
+    ): Unit = parseList(prop, sizeChecker, validator) { parseUINT() }
 
-    override fun LONG(prop: KMutableProperty0<Long>, validator: (Long) -> Unit) =
+    final override fun LONG(prop: KMutableProperty0<Long>, validator: (Long) -> Unit) =
         validateAndSet(prop, validator) { parseLONG() }
 
-    override fun LONGS(
+    final override fun LONGS(
         prop: KMutableProperty0<List<Long>>,
         sizeChecker: (Int) -> Unit,
         validator: (Long) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseLONG() }
 
-    override fun ULONG(prop: KMutableProperty0<ULong>, validator: (ULong) -> Unit): Unit =
-        validateAndSet(prop, validator) { parseLONG().toULong() }
+    final override fun ULONG(prop: KMutableProperty0<ULong>, validator: (ULong) -> Unit): Unit =
+        validateAndSet(prop, validator) { parseULONG() }
 
-    override fun ULONGS(
+    final override fun ULONGS(
         prop: KMutableProperty0<List<ULong>>,
         sizeChecker: (Int) -> Unit,
         validator: (ULong) -> Unit
-    ): Unit = parseList(prop, sizeChecker, validator) { parseLONG().toULong() }
+    ): Unit = parseList(prop, sizeChecker, validator) { parseULONG() }
 
-    override fun FLOAT(prop: KMutableProperty0<Float>, validator: (Float) -> Unit) =
+    final override fun FLOAT(prop: KMutableProperty0<Float>, validator: (Float) -> Unit) =
         validateAndSet(prop, validator) { parseFLOAT() }
 
-    override fun FLOATS(prop: KMutableProperty0<List<Float>>, sizeChecker: (Int) -> Unit, validator: (Float) -> Unit) =
+    final override fun FLOATS(prop: KMutableProperty0<List<Float>>, sizeChecker: (Int) -> Unit, validator: (Float) -> Unit) =
         parseList(prop, sizeChecker, validator) { parseFLOAT() }
 
-    override fun DOUBLE(prop: KMutableProperty0<Double>, validator: (Double) -> Unit) =
+    final override fun DOUBLE(prop: KMutableProperty0<Double>, validator: (Double) -> Unit) =
         validateAndSet(prop, validator) { parseDOUBLE() }
 
-    override fun DOUBLES(
+    final override fun DOUBLES(
         prop: KMutableProperty0<List<Double>>,
         sizeChecker: (Int) -> Unit,
         validator: (Double) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseDOUBLE() }
 
-    override fun <E : Enum<E>> ENUM8(prop: KMutableProperty0<E>, values: Array<E>, validator: (E) -> Unit) =
+    final override fun <E : Enum<E>> ENUM8(prop: KMutableProperty0<E>, values: Array<E>, validator: (E) -> Unit) =
         validateAndSet(prop, validator) { parseENUM8(values) }
 
-    override fun <E : Enum<E>> ENUM8S(
+    final override fun <E : Enum<E>> ENUM8S(
         prop: KMutableProperty0<List<E>>,
         values: Array<E>,
         sizeChecker: (Int) -> Unit,
         validator: (E) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseENUM8(values) }
 
-    override fun <E : Enum<E>> ENUM16(prop: KMutableProperty0<E>, values: Array<E>, validator: (E) -> Unit) =
+    final override fun <E : Enum<E>> ENUM16(prop: KMutableProperty0<E>, values: Array<E>, validator: (E) -> Unit) =
         validateAndSet(prop, validator) { parseENUM16(values) }
 
-    override fun <E : Enum<E>> ENUM16S(
+    final override fun <E : Enum<E>> ENUM16S(
         prop: KMutableProperty0<List<E>>,
         values: Array<E>,
         sizeChecker: (Int) -> Unit,
         validator: (E) -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseENUM16(values) }
 
-    override fun <T> OBJECT(prop: KMutableProperty0<T?>, po: ProtokolObject<T>, validator: T?.() -> Unit) =
+    final override fun <T> OBJECT(prop: KMutableProperty0<T?>, po: ProtokolObject<T>, validator: T?.() -> Unit) =
         validateAndSet(prop, validator) { parseOBJECT(po) }
 
-    override fun <T> OBJECTS(
+    final override fun <T> OBJECTS(
         prop: KMutableProperty0<List<T>>,
         po: ProtokolObject<T>,
         sizeChecker: (Int) -> Unit,
         validator: T.() -> Unit
     ) = parseList(prop, sizeChecker, validator) { parseOBJECT(po) ?: throw NullPointerException() }
 
-    override fun BITSET8(
+    final override fun BITSET8(
         b0: KMutableProperty0<Boolean>?,
         b1: KMutableProperty0<Boolean>?,
         b2: KMutableProperty0<Boolean>?,
@@ -258,16 +226,18 @@ abstract class ProtokolParser : Protokol {
             b7: Boolean
         ) -> Unit
     ) {
-        val byte = parseBYTE().toInt()
+        val bits = parseBITSET8()
 
-        val bit0 = byte and 0b00000001 > 0
-        val bit1 = byte and 0b00000010 > 0
-        val bit2 = byte and 0b00000100 > 0
-        val bit3 = byte and 0b00001000 > 0
-        val bit4 = byte and 0b00010000 > 0
-        val bit5 = byte and 0b00100000 > 0
-        val bit6 = byte and 0b01000000 > 0
-        val bit7 = byte and 0b10000000 > 0
+        require(bits.size == 8)
+
+        val bit0 = bits[0]
+        val bit1 = bits[1]
+        val bit2 = bits[2]
+        val bit3 = bits[3]
+        val bit4 = bits[4]
+        val bit5 = bits[5]
+        val bit6 = bits[6]
+        val bit7 = bits[7]
 
         validator(bit0, bit1, bit2, bit3, bit4, bit5, bit6, bit7)
 
@@ -281,7 +251,7 @@ abstract class ProtokolParser : Protokol {
         b7?.set(bit7)
     }
 
-    override fun <K, V> MAP(prop: KMutableProperty0<Map<K, V>>, po: ProtokolObject<ProtokolMapEntry<K, V>>) {
+    final override fun <K, V> MAP(prop: KMutableProperty0<Map<K, V>>, po: ProtokolObject<ProtokolMapEntry<K, V>>) {
         val map = mutableMapOf<K, V>()
         val size = parseSize()
         repeat(size) {

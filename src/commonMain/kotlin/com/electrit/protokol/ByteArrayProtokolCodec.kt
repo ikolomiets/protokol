@@ -1,16 +1,16 @@
 package com.electrit.protokol
 
-object ByteArrayProtokolCodec : ProtokolCodec() {
+object ByteArrayProtokolCodec : ProtokolCodec<ByteArray>() {
 
-    private class ByteArrayProtokolComposer(private val bytes: ByteArray) : ProtokolComposer() {
+    private class ByteArrayProtokolComposer(private val bytes: ByteArray) : StandardProtokolComposer() {
         private var offset = 0
 
-        override fun composeByte(value: Byte) {
+        override fun composeBYTE(value: Byte) {
             ensureEnoughSpace(1)
             bytes[offset++] = value
         }
 
-        override fun composeByteArray(value: ByteArray) {
+        override fun composeBYTEARRAY(value: ByteArray) {
             composeSize(value.size)
             ensureEnoughSpace(value.size)
             value.copyInto(bytes, offset)
@@ -21,7 +21,7 @@ object ByteArrayProtokolCodec : ProtokolCodec() {
             require(offset + size <= bytes.size) { "Not enough space: free=${bytes.size - offset}, need=$size" }
     }
 
-    private class ByteArrayProtokolParser(private val bytes: ByteArray) : ProtokolParser() {
+    private class ByteArrayProtokolParser(private val bytes: ByteArray) : StandardProtokolParser() {
         private var offset = 0
 
         override fun parseBYTE(): Byte = bytes[offset++]
@@ -34,27 +34,10 @@ object ByteArrayProtokolCodec : ProtokolCodec() {
         }
     }
 
-    override fun <T> encode(value: T, po: ProtokolObject<T>): ByteArray {
-        val protokol = po.protokol
+    override fun allocate(size: Int): ByteArray = ByteArray(size)
 
-        val sizer = Sizer().apply {
-            protokol(value)
-        }
+    override fun createComposer(data: ByteArray): StandardProtokolComposer = ByteArrayProtokolComposer(data)
 
-        return ByteArray(sizer.size).apply {
-            with(ByteArrayProtokolComposer(this)) {
-                protokol(value)
-            }
-        }
-    }
-
-    override fun <T> decode(bytes: ByteArray, po: ProtokolObject<T>): T {
-        val protokol = po.protokol
-        return po.create().apply {
-            with(ByteArrayProtokolParser(bytes)) {
-                protokol(this@apply)
-            }
-        }
-    }
+    override fun createParser(data: ByteArray): StandardProtokolParser = ByteArrayProtokolParser(data)
 
 }

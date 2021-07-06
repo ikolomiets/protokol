@@ -8,15 +8,21 @@ class SizeTest {
 
     private val bytes = mutableListOf<Byte>()
 
-    private val composer = object : ProtokolComposer() {
-        override fun composeByte(value: Byte) {
+    private val composer = object : StandardProtokolComposer() {
+        // public composeSizeForTest() to call protected composeSize()
+        fun composeSizeForTest(size: Int) = composeSize(size)
+
+        override fun composeBYTE(value: Byte) {
             bytes += value
         }
 
-        override fun composeByteArray(value: ByteArray): Unit = throw NotImplementedError()
+        override fun composeBYTEARRAY(value: ByteArray): Unit = throw NotImplementedError()
     }
 
-    private val parser = object : ProtokolParser() {
+    private val parser = object : StandardProtokolParser() {
+        // public parseSizeForTest() to call protected parseSize()
+        fun parseSizeForTest() = parseSize()
+
         override fun parseBYTE(): Byte = bytes.removeFirst()
 
         override fun parseBYTEARRAY(): ByteArray = throw NotImplementedError()
@@ -26,9 +32,9 @@ class SizeTest {
     fun test() {
         fun assertSize(size: Int, expectedBytes: Int) {
             bytes.clear()
-            composer.composeSize(size)
+            composer.composeSizeForTest(size)
             assertEquals(expectedBytes, bytes.size)
-            assertEquals(size, parser.parseSize())
+            assertEquals(size, parser.parseSizeForTest())
         }
 
         assertFailsWith<IllegalArgumentException> { assertSize(-1, 1) }
